@@ -2,7 +2,11 @@
 
 ## Core Principle
 
-**No implementation without an approved feature file.**
+**Tests come before code. Always.**
+
+1. **No implementation without tests first** - Write failing tests before any implementation code
+2. **No feature without an approved feature file** - Gherkin specifications must be reviewed and approved before coding
+3. **Red-Green-Refactor** - Follow the TDD cycle strictly
 
 Every feature must start with a Gherkin specification that is reviewed and approved before any code is written.
 

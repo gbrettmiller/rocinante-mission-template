@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useVsmStore } from '../../stores/vsmStore'
+import { MAP_TEMPLATES } from '../../data/stepTemplates'
 
 function WelcomeScreen() {
-  const { createNewMap, loadExample, importFromJson } = useVsmStore()
+  const { createNewMap, loadExample, loadTemplate, importFromJson } = useVsmStore()
   const [mapName, setMapName] = useState('')
   const fileInputRef = useRef(null)
 
@@ -19,6 +20,13 @@ function WelcomeScreen() {
   const handleStartWithExample = useCallback(() => {
     loadExample()
   }, [loadExample])
+
+  const handleLoadTemplate = useCallback(
+    (template) => {
+      loadTemplate(template)
+    },
+    [loadTemplate]
+  )
 
   const handleImport = useCallback(() => {
     fileInputRef.current?.click()
@@ -85,17 +93,42 @@ function WelcomeScreen() {
             </div>
           </div>
 
-          <button
-            onClick={handleStartWithExample}
-            className="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors mb-3"
-            data-testid="start-with-example-button"
-          >
-            Start with Example Map
-          </button>
-
-          <p className="text-xs text-gray-500 text-center mb-4">
-            A pre-built software delivery value stream with sample data
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Start with a Template
+            </p>
+            <button
+              onClick={handleStartWithExample}
+              className="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors text-left flex items-center gap-3"
+              data-testid="start-with-example-button"
+            >
+              <span className="text-xl">📊</span>
+              <div>
+                <div>Software Delivery Example</div>
+                <div className="text-xs text-green-200">
+                  Full example with sample metrics
+                </div>
+              </div>
+            </button>
+            {MAP_TEMPLATES.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => handleLoadTemplate(template)}
+                className="w-full py-3 px-4 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors text-left flex items-center gap-3"
+                data-testid={`template-${template.id}-button`}
+              >
+                <span className="text-xl">
+                  {template.id === 'software-delivery' ? '🚀' : '🎫'}
+                </span>
+                <div>
+                  <div>{template.name}</div>
+                  <div className="text-xs text-emerald-200">
+                    {template.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">

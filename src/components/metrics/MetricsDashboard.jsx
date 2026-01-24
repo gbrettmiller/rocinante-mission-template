@@ -45,9 +45,14 @@ MetricCard.defaultProps = {
 }
 
 function MetricsDashboard() {
-  const { steps } = useVsmStore()
+  const { steps, connections } = useVsmStore()
 
-  const metrics = useMemo(() => calculateAllMetrics(steps), [steps])
+  const metrics = useMemo(
+    () => calculateAllMetrics(steps, connections),
+    [steps, connections]
+  )
+
+  const hasRework = connections.some((c) => c.type === 'rework')
 
   if (steps.length === 0) {
     return (
@@ -67,7 +72,7 @@ function MetricsDashboard() {
       className="bg-white border-t border-gray-200 px-6 py-4"
       data-testid="metrics-dashboard"
     >
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
         <MetricCard
           title="Total Lead Time"
           value={formatDuration(metrics.totalLeadTime)}
@@ -107,6 +112,32 @@ function MetricsDashboard() {
           status={metrics.firstPassYield.status}
           tooltip="Probability an item passes through without any rework"
         />
+
+        <MetricCard
+          title="Total Queue"
+          value={String(metrics.totalQueueSize)}
+          subtitle="Items waiting"
+          status={metrics.totalQueueSize > 10 ? 'warning' : 'neutral'}
+          tooltip="Total number of items waiting across all steps"
+        />
+
+        <MetricCard
+          title="Avg Process Time"
+          value={metrics.activityRatio.displayValue}
+          subtitle="Per step"
+          status="neutral"
+          tooltip="Average process time per step - indicates work density"
+        />
+
+        {hasRework && (
+          <MetricCard
+            title="Effective Lead Time"
+            value={metrics.reworkImpact.displayValue}
+            subtitle={`${metrics.reworkImpact.reworkMultiplier}x multiplier`}
+            status={metrics.reworkImpact.status}
+            tooltip="Lead time accounting for rework loops"
+          />
+        )}
 
         <MetricCard
           title="Steps"

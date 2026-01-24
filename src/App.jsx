@@ -7,20 +7,34 @@ import Sidebar from './components/ui/Sidebar'
 import MetricsDashboard from './components/metrics/MetricsDashboard'
 import WelcomeScreen from './components/ui/WelcomeScreen'
 import StepEditor from './components/builder/StepEditor'
+import ConnectionEditor from './components/builder/ConnectionEditor'
 
 function App() {
-  const { id, selectedStepId, isEditing, setEditing, clearSelection } =
-    useVsmStore()
+  const {
+    id,
+    selectedStepId,
+    isEditing,
+    setEditing,
+    clearSelection,
+    selectedConnectionId,
+    isEditingConnection,
+    clearConnectionSelection,
+  } = useVsmStore()
 
   const handleCanvasClick = useCallback(() => {
-    if (isEditing) return
+    if (isEditing || isEditingConnection) return
     clearSelection()
-  }, [isEditing, clearSelection])
+    clearConnectionSelection()
+  }, [isEditing, isEditingConnection, clearSelection, clearConnectionSelection])
 
   const handleCloseEditor = useCallback(() => {
     setEditing(false)
     clearSelection()
   }, [setEditing, clearSelection])
+
+  const handleCloseConnectionEditor = useCallback(() => {
+    clearConnectionSelection()
+  }, [clearConnectionSelection])
 
   if (!id) {
     return <WelcomeScreen />
@@ -40,6 +54,12 @@ function App() {
           </main>
           {selectedStepId && isEditing && (
             <StepEditor stepId={selectedStepId} onClose={handleCloseEditor} />
+          )}
+          {selectedConnectionId && isEditingConnection && (
+            <ConnectionEditor
+              connectionId={selectedConnectionId}
+              onClose={handleCloseConnectionEditor}
+            />
           )}
         </div>
       </div>

@@ -9,6 +9,8 @@ class VSMWorld extends World {
     this.metrics = null
     this.error = null
     this.selectedStep = null
+    this.selectedConnection = null
+    this.pendingConnection = null
   }
 
   createVSM(name) {
@@ -60,7 +62,7 @@ class VSMWorld extends World {
     )
   }
 
-  addConnection(sourceName, targetName) {
+  addConnection(sourceName, targetName, type = 'forward', reworkRate = 0) {
     const source = this.findStep(sourceName)
     const target = this.findStep(targetName)
     if (!source || !target) return null
@@ -74,15 +76,38 @@ class VSMWorld extends World {
       id: `${source.id}-${target.id}`,
       source: source.id,
       target: target.id,
-      type: 'forward',
-      reworkRate: 0,
+      type,
+      reworkRate,
     }
     this.connections.push(connection)
     return connection
   }
 
+  findConnection(sourceName, targetName) {
+    const source = this.findStep(sourceName)
+    const target = this.findStep(targetName)
+    if (!source || !target) return null
+    return this.connections.find(
+      (c) => c.source === source.id && c.target === target.id
+    )
+  }
+
+  updateConnection(connectionId, updates) {
+    const index = this.connections.findIndex((c) => c.id === connectionId)
+    if (index >= 0) {
+      this.connections[index] = { ...this.connections[index], ...updates }
+    }
+  }
+
   deleteConnection(connectionId) {
     this.connections = this.connections.filter((c) => c.id !== connectionId)
+    if (this.selectedConnection?.id === connectionId) {
+      this.selectedConnection = null
+    }
+  }
+
+  selectConnection(connectionId) {
+    this.selectedConnection = this.connections.find((c) => c.id === connectionId)
   }
 
   calculateMetrics() {
@@ -99,6 +124,25 @@ class VSMWorld extends World {
       1
     ) * 100
 
+    // Total queue size
+    const totalQueueSize = this.steps.reduce((sum, s) => sum + (s.queueSize || 0), 0)
+
+    // Activity ratio (average process time)
+    const activityRatio = this.steps.length > 0 ? totalProcessTime / this.steps.length : 0
+
+    // Rework impact
+    const reworkConnections = this.connections.filter((c) => c.type === 'rework')
+    const totalReworkRate = Math.min(
+      reworkConnections.reduce((sum, c) => sum + (c.reworkRate || 0) / 100, 0),
+      0.95
+    )
+    const reworkMultiplier = totalReworkRate > 0 ? 1 / (1 - totalReworkRate) : 1
+    const effectiveLeadTime = Math.round(totalLeadTime * reworkMultiplier)
+
+    let reworkStatus = 'good'
+    if (reworkMultiplier > 1.3) reworkStatus = 'critical'
+    else if (reworkMultiplier > 1.1) reworkStatus = 'warning'
+
     this.metrics = {
       totalLeadTime,
       totalProcessTime,
@@ -106,6 +150,12 @@ class VSMWorld extends World {
       flowStatus,
       firstPassYield,
       stepCount: this.steps.length,
+      totalQueueSize,
+      activityRatio,
+      effectiveLeadTime,
+      reworkMultiplier,
+      reworkStatus,
+      hasRework: reworkConnections.length > 0,
     }
     return this.metrics
   }

@@ -74,6 +74,8 @@ Given('a value stream with steps:', function (dataTable) {
     this.addStep(row.name, 'custom', {
       processTime: parseInt(row.processTime) || 60,
       leadTime: parseInt(row.leadTime) || 240,
+      queueSize: parseInt(row.queueSize) || 0,
+      batchSize: parseInt(row.batchSize) || 1,
     })
   })
 })

@@ -16,15 +16,23 @@ VSM Workshop is an interactive web application that guides software development 
 - **Code Formatting**: Prettier (single quotes, no semicolons)
 - **Package Manager**: pnpm
 
-## Development Workflow: ATDD
+## Development Workflow: Test-First (TDD/ATDD)
 
-This project follows **Acceptance Test Driven Development (ATDD)**:
+**Tests must always come before code.**
 
-1. **Feature File First**: Before implementing any feature, create a feature file describing the behavior in Gherkin syntax
-2. **Review**: Feature files must be reviewed and approved before implementation begins
-3. **Step Definitions**: Write step definitions that will initially fail
-4. **Implementation**: Write the minimum code to make acceptance tests pass
-5. **Refactor**: Clean up while keeping tests green
+This project follows strict **Test-Driven Development**:
+
+1. **Write Tests First**: Before implementing any code, write the tests that define the expected behavior
+2. **Feature File First**: For new features, create a Gherkin feature file describing the behavior
+3. **Review**: Feature files must be reviewed and approved before implementation begins
+4. **Red Phase**: Run tests and verify they fail for the expected reason
+5. **Green Phase**: Write the minimum code to make tests pass
+6. **Refactor**: Clean up while keeping tests green
+
+This applies to all levels:
+- **Acceptance tests** (Cucumber) - Write feature files before features
+- **Unit tests** (Vitest) - Write test cases before implementing functions
+- **Integration tests** - Write tests before wiring components
 
 ### Workflow Commands
 
@@ -121,10 +129,12 @@ pnpm preview
 
 ### Feature Development Process
 
-1. **Never implement without a feature file** - All features start with Gherkin
-2. **Review before coding** - Feature files require approval
-3. **Small increments** - One scenario at a time
-4. **Tests drive design** - Let acceptance tests guide the implementation
+1. **Tests first, always** - Write tests before writing any implementation code
+2. **Never implement without a feature file** - All features start with Gherkin
+3. **Unit tests before functions** - Write unit tests before implementing utility functions
+4. **Review before coding** - Feature files require approval
+5. **Small increments** - One scenario at a time
+6. **Tests drive design** - Let tests guide the implementation
 
 ### Component Patterns
 

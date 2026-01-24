@@ -1,5 +1,20 @@
 # Testing Standards
 
+## Test-First Development (TDD)
+
+**Tests must always be written before implementation code.**
+
+When implementing any feature or bug fix:
+1. Write the failing test(s) first
+2. Verify the test fails for the expected reason
+3. Write the minimum code to make the test pass
+4. Refactor while keeping tests green
+
+This applies to:
+- **Acceptance tests** - Write feature files before any implementation
+- **Unit tests** - Write test cases before implementing functions
+- **Integration tests** - Write tests before wiring components together
+
 ## Testing Pyramid
 
 1. **Acceptance Tests** (Cucumber) - User-facing behavior

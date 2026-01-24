@@ -4,6 +4,10 @@ import {
   calculateTotalProcessTime,
   calculateFlowEfficiency,
   calculateFirstPassYield,
+  calculateTotalQueueSize,
+  calculateActivityRatio,
+  calculateReworkImpact,
+  identifyBottlenecks,
   calculateAllMetrics,
   formatDuration,
 } from '../../../src/utils/calculations/metrics'
@@ -144,11 +148,141 @@ describe('calculateFirstPassYield', () => {
   })
 })
 
+describe('calculateTotalQueueSize', () => {
+  it('returns 0 for empty array', () => {
+    expect(calculateTotalQueueSize([])).toBe(0)
+  })
+
+  it('returns 0 for null/undefined', () => {
+    expect(calculateTotalQueueSize(null)).toBe(0)
+    expect(calculateTotalQueueSize(undefined)).toBe(0)
+  })
+
+  it('sums queue sizes from all steps', () => {
+    const steps = [
+      { queueSize: 5 },
+      { queueSize: 3 },
+      { queueSize: 7 },
+    ]
+    expect(calculateTotalQueueSize(steps)).toBe(15)
+  })
+
+  it('handles missing queueSize values', () => {
+    const steps = [
+      { queueSize: 5 },
+      { name: 'no queue' },
+      { queueSize: 3 },
+    ]
+    expect(calculateTotalQueueSize(steps)).toBe(8)
+  })
+})
+
+describe('calculateActivityRatio', () => {
+  it('returns N/A for empty array', () => {
+    const result = calculateActivityRatio([])
+    expect(result.displayValue).toBe('N/A')
+  })
+
+  it('calculates average process time per step', () => {
+    const steps = [
+      { processTime: 60 },
+      { processTime: 30 },
+      { processTime: 45 },
+    ]
+    const result = calculateActivityRatio(steps)
+    expect(result.value).toBe(45)
+    expect(result.displayValue).toBe('45m')
+  })
+})
+
+describe('calculateReworkImpact', () => {
+  it('returns base lead time when no connections', () => {
+    const steps = [{ leadTime: 100 }, { leadTime: 200 }]
+    const result = calculateReworkImpact(steps, [])
+    expect(result.effectiveLeadTime).toBe(300)
+    expect(result.reworkMultiplier).toBe(1)
+  })
+
+  it('returns base lead time when no rework connections', () => {
+    const steps = [{ leadTime: 100 }, { leadTime: 200 }]
+    const connections = [{ type: 'forward' }]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.effectiveLeadTime).toBe(300)
+    expect(result.reworkMultiplier).toBe(1)
+  })
+
+  it('calculates effective lead time with rework', () => {
+    const steps = [{ leadTime: 100 }, { leadTime: 200 }]
+    const connections = [{ type: 'rework', reworkRate: 20 }]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.reworkMultiplier).toBe(1.25)
+    expect(result.effectiveLeadTime).toBe(375)
+    expect(result.totalReworkRate).toBe(20)
+  })
+
+  it('caps rework rate at 95% to avoid infinity', () => {
+    const steps = [{ leadTime: 100 }]
+    const connections = [
+      { type: 'rework', reworkRate: 50 },
+      { type: 'rework', reworkRate: 50 },
+    ]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.reworkMultiplier).toBe(20) // 1 / (1 - 0.95)
+  })
+
+  it('returns good status for low rework', () => {
+    const steps = [{ leadTime: 100 }]
+    const connections = [{ type: 'rework', reworkRate: 5 }]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.status).toBe('good')
+  })
+
+  it('returns warning status for moderate rework', () => {
+    const steps = [{ leadTime: 100 }]
+    const connections = [{ type: 'rework', reworkRate: 20 }]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.status).toBe('warning')
+  })
+
+  it('returns critical status for high rework', () => {
+    const steps = [{ leadTime: 100 }]
+    const connections = [{ type: 'rework', reworkRate: 30 }]
+    const result = calculateReworkImpact(steps, connections)
+    expect(result.status).toBe('critical')
+  })
+})
+
+describe('identifyBottlenecks', () => {
+  it('returns empty array for no steps', () => {
+    expect(identifyBottlenecks([])).toEqual([])
+  })
+
+  it('returns empty array when no queues', () => {
+    const steps = [
+      { id: '1', queueSize: 0 },
+      { id: '2', queueSize: 0 },
+    ]
+    expect(identifyBottlenecks(steps)).toEqual([])
+  })
+
+  it('identifies steps with high queue sizes', () => {
+    const steps = [
+      { id: '1', queueSize: 2 },
+      { id: '2', queueSize: 10 },
+      { id: '3', queueSize: 3 },
+    ]
+    const bottlenecks = identifyBottlenecks(steps)
+    expect(bottlenecks).toContain('2')
+    expect(bottlenecks).not.toContain('1')
+    expect(bottlenecks).not.toContain('3')
+  })
+})
+
 describe('calculateAllMetrics', () => {
   it('returns all metrics for a value stream', () => {
     const steps = [
-      { processTime: 60, leadTime: 240, percentCompleteAccurate: 95 },
-      { processTime: 30, leadTime: 120, percentCompleteAccurate: 90 },
+      { processTime: 60, leadTime: 240, percentCompleteAccurate: 95, queueSize: 5 },
+      { processTime: 30, leadTime: 120, percentCompleteAccurate: 90, queueSize: 3 },
     ]
     const metrics = calculateAllMetrics(steps)
 
@@ -157,6 +291,20 @@ describe('calculateAllMetrics', () => {
     expect(metrics.flowEfficiency.percentage).toBe(25)
     expect(metrics.firstPassYield.percentage).toBeCloseTo(85.5, 0)
     expect(metrics.stepCount).toBe(2)
+    expect(metrics.totalQueueSize).toBe(8)
+    expect(metrics.activityRatio.value).toBe(45)
+  })
+
+  it('calculates rework impact when connections provided', () => {
+    const steps = [
+      { processTime: 60, leadTime: 240, percentCompleteAccurate: 95 },
+      { processTime: 30, leadTime: 120, percentCompleteAccurate: 90 },
+    ]
+    const connections = [{ type: 'rework', reworkRate: 20 }]
+    const metrics = calculateAllMetrics(steps, connections)
+
+    expect(metrics.reworkImpact.reworkMultiplier).toBe(1.25)
+    expect(metrics.reworkImpact.effectiveLeadTime).toBe(450)
   })
 })
 

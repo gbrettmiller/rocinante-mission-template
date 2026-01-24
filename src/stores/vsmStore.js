@@ -43,6 +43,8 @@ export const useVsmStore = create(
       // UI State
       selectedStepId: null,
       isEditing: false,
+      selectedConnectionId: null,
+      isEditingConnection: false,
 
       // Actions
       createNewMap: (name) => {
@@ -57,6 +59,8 @@ export const useVsmStore = create(
           updatedAt: now,
           selectedStepId: null,
           isEditing: false,
+          selectedConnectionId: null,
+          isEditingConnection: false,
         })
       },
 
@@ -72,6 +76,8 @@ export const useVsmStore = create(
           updatedAt: now,
           selectedStepId: null,
           isEditing: false,
+          selectedConnectionId: null,
+          isEditingConnection: false,
         })
         // Recreate connections with new IDs
         const { steps } = get()
@@ -86,6 +92,41 @@ export const useVsmStore = create(
           target: stepIdMap[conn.target],
         }))
         set({ connections: newConnections })
+      },
+
+      loadTemplate: (template) => {
+        const now = new Date().toISOString()
+        // Create steps with new IDs
+        const newSteps = template.steps.map((step) => ({
+          ...step,
+          id: crypto.randomUUID(),
+        }))
+
+        set({
+          id: crypto.randomUUID(),
+          name: template.name,
+          description: template.description,
+          steps: newSteps,
+          connections: [],
+          createdAt: now,
+          updatedAt: now,
+          selectedStepId: null,
+          isEditing: false,
+          selectedConnectionId: null,
+          isEditingConnection: false,
+        })
+
+        // Create connections with new step IDs
+        if (template.connections && template.connections.length > 0) {
+          const newConnections = template.connections.map((conn) => ({
+            id: `${newSteps[conn.source].id}-${newSteps[conn.target].id}`,
+            source: newSteps[conn.source].id,
+            target: newSteps[conn.target].id,
+            type: conn.type || 'forward',
+            reworkRate: conn.reworkRate || 0,
+          }))
+          set({ connections: newConnections })
+        }
       },
 
       updateMapName: (name) => {
@@ -163,9 +204,12 @@ export const useVsmStore = create(
       },
 
       deleteConnection: (connectionId) => {
-        const { connections } = get()
+        const { connections, selectedConnectionId, isEditingConnection } = get()
+        const isSelectedConnection = selectedConnectionId === connectionId
         set({
           connections: connections.filter((conn) => conn.id !== connectionId),
+          selectedConnectionId: isSelectedConnection ? null : selectedConnectionId,
+          isEditingConnection: isSelectedConnection ? false : isEditingConnection,
           updatedAt: new Date().toISOString(),
         })
       },
@@ -180,6 +224,37 @@ export const useVsmStore = create(
 
       setEditing: (isEditing) => {
         set({ isEditing })
+      },
+
+      // Connection Selection
+      selectConnection: (connectionId) => {
+        set({
+          selectedConnectionId: connectionId,
+          isEditingConnection: true,
+          selectedStepId: null,
+          isEditing: false,
+        })
+      },
+
+      updateConnection: (connectionId, updates) => {
+        const { connections } = get()
+        set({
+          connections: connections.map((conn) =>
+            conn.id === connectionId ? { ...conn, ...updates } : conn
+          ),
+          updatedAt: new Date().toISOString(),
+        })
+      },
+
+      setEditingConnection: (isEditingConnection) => {
+        set({ isEditingConnection })
+      },
+
+      clearConnectionSelection: () => {
+        set({
+          selectedConnectionId: null,
+          isEditingConnection: false,
+        })
       },
 
       // Import/Export
@@ -206,6 +281,8 @@ export const useVsmStore = create(
             updatedAt: new Date().toISOString(),
             selectedStepId: null,
             isEditing: false,
+            selectedConnectionId: null,
+            isEditingConnection: false,
           })
           return true
         } catch (e) {
@@ -225,6 +302,8 @@ export const useVsmStore = create(
           updatedAt: null,
           selectedStepId: null,
           isEditing: false,
+          selectedConnectionId: null,
+          isEditingConnection: false,
         })
       },
     }),

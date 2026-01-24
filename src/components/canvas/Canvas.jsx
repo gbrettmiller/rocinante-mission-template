@@ -33,12 +33,15 @@ function Canvas() {
     steps,
     connections,
     selectedStepId,
+    selectedConnectionId,
     addConnection,
     deleteConnection,
     updateStepPosition,
     selectStep,
     setEditing,
     deleteStep,
+    selectConnection,
+    clearConnectionSelection,
   } = useVsmStore()
 
   const nodes = useMemo(
@@ -55,20 +58,25 @@ function Canvas() {
 
   const edges = useMemo(
     () =>
-      connections.map((conn) => ({
-        id: conn.id,
-        source: conn.source,
-        target: conn.target,
-        type: 'smoothstep',
-        animated: conn.type === 'rework',
-        style: {
-          stroke: conn.type === 'rework' ? '#ef4444' : '#6b7280',
-          strokeDasharray: conn.type === 'rework' ? '5,5' : 'none',
-        },
-        label: conn.type === 'rework' ? `${conn.reworkRate}% rework` : undefined,
-        labelStyle: { fill: '#ef4444', fontSize: 10 },
-      })),
-    [connections]
+      connections.map((conn) => {
+        const isSelected = conn.id === selectedConnectionId
+        return {
+          id: conn.id,
+          source: conn.source,
+          target: conn.target,
+          type: 'smoothstep',
+          animated: conn.type === 'rework',
+          selected: isSelected,
+          style: {
+            stroke: isSelected ? '#3b82f6' : conn.type === 'rework' ? '#ef4444' : '#6b7280',
+            strokeWidth: isSelected ? 3 : 2,
+            strokeDasharray: conn.type === 'rework' ? '5,5' : 'none',
+          },
+          label: conn.type === 'rework' ? `${conn.reworkRate}% rework` : undefined,
+          labelStyle: { fill: conn.type === 'rework' ? '#ef4444' : '#6b7280', fontSize: 10 },
+        }
+      }),
+    [connections, selectedConnectionId]
   )
 
   const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(nodes)
@@ -100,9 +108,10 @@ function Canvas() {
   const onNodeClick = useCallback(
     (event, node) => {
       event.stopPropagation()
+      clearConnectionSelection()
       selectStep(node.id)
     },
-    [selectStep]
+    [selectStep, clearConnectionSelection]
   )
 
   const onNodeDoubleClick = useCallback(
@@ -116,11 +125,10 @@ function Canvas() {
 
   const onEdgeClick = useCallback(
     (event, edge) => {
-      if (confirm('Delete this connection?')) {
-        deleteConnection(edge.id)
-      }
+      event.stopPropagation()
+      selectConnection(edge.id)
     },
-    [deleteConnection]
+    [selectConnection]
   )
 
   const onKeyDown = useCallback(

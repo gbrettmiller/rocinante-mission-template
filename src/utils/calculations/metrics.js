@@ -95,15 +95,126 @@ export function calculateFirstPassYield(steps) {
 }
 
 /**
+ * Calculate total queue size across all steps
+ * @param {Array} steps - Array of process steps
+ * @returns {number} Total queue size
+ */
+export function calculateTotalQueueSize(steps) {
+  if (!steps || steps.length === 0) return 0
+  return steps.reduce((sum, step) => sum + (step.queueSize || 0), 0)
+}
+
+/**
+ * Calculate activity ratio (average process time per step)
+ * Higher indicates more value-added work per step
+ * @param {Array} steps - Array of process steps
+ * @returns {Object} Activity ratio result
+ */
+export function calculateActivityRatio(steps) {
+  if (!steps || steps.length === 0) {
+    return {
+      value: 0,
+      displayValue: 'N/A',
+    }
+  }
+  const avgProcessTime = calculateTotalProcessTime(steps) / steps.length
+  return {
+    value: avgProcessTime,
+    displayValue: formatDuration(Math.round(avgProcessTime)),
+  }
+}
+
+/**
+ * Calculate effective lead time accounting for rework loops
+ * Uses geometric series: for each rework loop, multiply affected path by 1/(1-reworkRate)
+ * @param {Array} steps - Array of process steps
+ * @param {Array} connections - Array of connections between steps
+ * @returns {Object} Rework impact metrics
+ */
+export function calculateReworkImpact(steps, connections) {
+  const baseLeadTime = calculateTotalLeadTime(steps)
+
+  if (!connections || connections.length === 0) {
+    return {
+      effectiveLeadTime: baseLeadTime,
+      reworkMultiplier: 1,
+      totalReworkRate: 0,
+      status: 'neutral',
+      displayValue: formatDuration(baseLeadTime),
+    }
+  }
+
+  const reworkConnections = connections.filter((c) => c.type === 'rework')
+  if (reworkConnections.length === 0) {
+    return {
+      effectiveLeadTime: baseLeadTime,
+      reworkMultiplier: 1,
+      totalReworkRate: 0,
+      status: 'neutral',
+      displayValue: formatDuration(baseLeadTime),
+    }
+  }
+
+  // Calculate cumulative rework impact
+  // For simplicity, we sum rework rates (capped at 95% to avoid infinity)
+  const totalReworkRate = Math.min(
+    reworkConnections.reduce((sum, c) => sum + (c.reworkRate || 0) / 100, 0),
+    0.95
+  )
+
+  const reworkMultiplier = 1 / (1 - totalReworkRate)
+  const effectiveLeadTime = Math.round(baseLeadTime * reworkMultiplier)
+
+  let status
+  if (reworkMultiplier <= 1.1) {
+    status = 'good'
+  } else if (reworkMultiplier <= 1.3) {
+    status = 'warning'
+  } else {
+    status = 'critical'
+  }
+
+  return {
+    effectiveLeadTime,
+    reworkMultiplier: Number(reworkMultiplier.toFixed(2)),
+    totalReworkRate: Number((totalReworkRate * 100).toFixed(1)),
+    status,
+    displayValue: formatDuration(effectiveLeadTime),
+  }
+}
+
+/**
+ * Identify bottleneck steps (queue size significantly above average)
+ * @param {Array} steps - Array of process steps
+ * @returns {Array} Array of step IDs identified as bottlenecks
+ */
+export function identifyBottlenecks(steps) {
+  if (!steps || steps.length === 0) return []
+
+  const stepsWithQueue = steps.filter((s) => (s.queueSize || 0) > 0)
+  if (stepsWithQueue.length === 0) return []
+
+  const avgQueue = stepsWithQueue.reduce((sum, s) => sum + s.queueSize, 0) / stepsWithQueue.length
+  const threshold = Math.max(avgQueue * 1.5, 5) // At least 5 items to be a bottleneck
+
+  return steps.filter((s) => (s.queueSize || 0) > threshold).map((s) => s.id)
+}
+
+/**
  * Calculate all metrics for a value stream
  * @param {Array} steps - Array of process steps
+ * @param {Array} connections - Array of connections between steps
  * @returns {Object} All calculated metrics
  */
-export function calculateAllMetrics(steps) {
+export function calculateAllMetrics(steps, connections = []) {
   const totalLeadTime = calculateTotalLeadTime(steps)
   const totalProcessTime = calculateTotalProcessTime(steps)
   const flowEfficiency = calculateFlowEfficiency(steps)
   const firstPassYield = calculateFirstPassYield(steps)
+  const totalQueueSize = calculateTotalQueueSize(steps)
+  const activityRatio = calculateActivityRatio(steps)
+  const reworkImpact = calculateReworkImpact(steps, connections)
+  const bottleneckIds = identifyBottlenecks(steps)
 
   return {
     totalLeadTime,
@@ -111,6 +222,10 @@ export function calculateAllMetrics(steps) {
     flowEfficiency,
     firstPassYield,
     stepCount: steps?.length || 0,
+    totalQueueSize,
+    activityRatio,
+    reworkImpact,
+    bottleneckIds,
   }
 }
 

@@ -1,15 +1,45 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import { useVsmStore } from '../../stores/vsmStore'
+import {
+  getTemplatesByCategory,
+  CATEGORY_LABELS,
+} from '../../data/stepTemplates'
+import { STEP_TYPE_CONFIG } from '../../data/stepTypes'
+import { formatDuration } from '../../utils/calculations/metrics'
 
 function Sidebar() {
   const { addStep, selectStep, setEditing } = useVsmStore()
+  const [expandedCategory, setExpandedCategory] = useState(null)
+
+  const templatesByCategory = getTemplatesByCategory()
 
   const handleAddStep = useCallback(() => {
     const step = addStep('New Step')
     selectStep(step.id)
     setEditing(true)
   }, [addStep, selectStep, setEditing])
+
+  const handleAddFromTemplate = useCallback(
+    (template) => {
+      const step = addStep(template.name, {
+        type: template.type,
+        description: template.description,
+        processTime: template.processTime,
+        leadTime: template.leadTime,
+        percentCompleteAccurate: template.percentCompleteAccurate,
+        queueSize: template.queueSize,
+        batchSize: template.batchSize,
+      })
+      selectStep(step.id)
+      setEditing(true)
+    },
+    [addStep, selectStep, setEditing]
+  )
+
+  const toggleCategory = useCallback((category) => {
+    setExpandedCategory((prev) => (prev === category ? null : category))
+  }, [])
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
@@ -22,7 +52,54 @@ function Sidebar() {
         <span>Add Step</span>
       </button>
 
-      <div className="mt-8">
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          Step Templates
+        </h2>
+        <div className="space-y-1">
+          {Object.entries(templatesByCategory).map(([category, templates]) => (
+            <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between"
+              >
+                <span>{CATEGORY_LABELS[category]}</span>
+                <span className="text-gray-400">
+                  {expandedCategory === category ? '−' : '+'}
+                </span>
+              </button>
+              {expandedCategory === category && (
+                <div className="border-t border-gray-200 bg-gray-50">
+                  {templates.map((template) => {
+                    const config = STEP_TYPE_CONFIG[template.type]
+                    return (
+                      <button
+                        key={template.id}
+                        onClick={() => handleAddFromTemplate(template)}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+                        data-testid={`template-${template.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{config?.icon || '⚙️'}</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {template.name}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5 ml-6">
+                          PT: {formatDuration(template.processTime)} | LT:{' '}
+                          {formatDuration(template.leadTime)}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
           How to Use
         </h2>

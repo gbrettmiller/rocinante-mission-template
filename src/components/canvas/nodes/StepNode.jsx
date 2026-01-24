@@ -4,12 +4,17 @@ import PropTypes from 'prop-types'
 import { STEP_TYPE_CONFIG } from '../../../data/stepTypes'
 import { formatDuration } from '../../../utils/calculations/metrics'
 
+const QUEUE_HIGH_THRESHOLD = 5
+
 function StepNode({ data, selected }) {
   const config = STEP_TYPE_CONFIG[data.type] || STEP_TYPE_CONFIG.custom
+  const hasQueue = data.queueSize > 0
+  const isHighQueue = data.queueSize >= QUEUE_HIGH_THRESHOLD
+  const hasBatch = data.batchSize > 1
 
   return (
     <div
-      className={`vsm-node vsm-node--${data.type} ${selected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`vsm-node vsm-node--${data.type} ${selected ? 'ring-2 ring-blue-500' : ''} ${isHighQueue ? 'vsm-node--bottleneck' : ''}`}
       data-testid={`step-node-${data.id}`}
     >
       <Handle
@@ -17,6 +22,21 @@ function StepNode({ data, selected }) {
         position={Position.Left}
         className="!bg-gray-400 !w-3 !h-3"
       />
+
+      {hasQueue && (
+        <div
+          className={`vsm-node__queue-badge ${isHighQueue ? 'vsm-node__queue-badge--high' : ''}`}
+          title={`${data.queueSize} items waiting`}
+        >
+          {data.queueSize}
+        </div>
+      )}
+
+      {hasBatch && (
+        <div className="vsm-node__batch-badge" title={`Batch size: ${data.batchSize}`}>
+          {data.batchSize}x
+        </div>
+      )}
 
       <div className="vsm-node__header">
         <span className="text-lg">{config.icon}</span>
@@ -36,18 +56,6 @@ function StepNode({ data, selected }) {
           <span className="text-gray-500">%C&A:</span>
           <span className="font-medium">{data.percentCompleteAccurate}%</span>
         </div>
-        {data.queueSize > 0 && (
-          <div>
-            <span className="text-gray-500">Queue:</span>
-            <span className="font-medium">{data.queueSize}</span>
-          </div>
-        )}
-        {data.batchSize > 1 && (
-          <div>
-            <span className="text-gray-500">Batch:</span>
-            <span className="font-medium">{data.batchSize}</span>
-          </div>
-        )}
       </div>
 
       <Handle
