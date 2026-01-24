@@ -1,0 +1,77 @@
+export const STEP_TYPES = {
+  PLANNING: 'planning',
+  DEVELOPMENT: 'development',
+  CODE_REVIEW: 'code_review',
+  TESTING: 'testing',
+  QA: 'qa',
+  STAGING: 'staging',
+  DEPLOYMENT: 'deployment',
+  MONITORING: 'monitoring',
+  CUSTOM: 'custom',
+}
+
+export const STEP_TYPE_CONFIG = {
+  [STEP_TYPES.PLANNING]: {
+    label: 'Planning',
+    icon: '📋',
+    color: 'yellow',
+    defaultProcessTime: 60,
+    defaultLeadTime: 240,
+  },
+  [STEP_TYPES.DEVELOPMENT]: {
+    label: 'Development',
+    icon: '💻',
+    color: 'blue',
+    defaultProcessTime: 120,
+    defaultLeadTime: 480,
+  },
+  [STEP_TYPES.CODE_REVIEW]: {
+    label: 'Code Review',
+    icon: '👀',
+    color: 'orange',
+    defaultProcessTime: 30,
+    defaultLeadTime: 120,
+  },
+  [STEP_TYPES.TESTING]: {
+    label: 'Testing',
+    icon: '🧪',
+    color: 'purple',
+    defaultProcessTime: 60,
+    defaultLeadTime: 240,
+  },
+  [STEP_TYPES.QA]: {
+    label: 'QA',
+    icon: '✅',
+    color: 'pink',
+    defaultProcessTime: 45,
+    defaultLeadTime: 180,
+  },
+  [STEP_TYPES.STAGING]: {
+    label: 'Staging',
+    icon: '🎭',
+    color: 'teal',
+    defaultProcessTime: 15,
+    defaultLeadTime: 60,
+  },
+  [STEP_TYPES.DEPLOYMENT]: {
+    label: 'Deployment',
+    icon: '🚀',
+    color: 'green',
+    defaultProcessTime: 15,
+    defaultLeadTime: 30,
+  },
+  [STEP_TYPES.MONITORING]: {
+    label: 'Monitoring',
+    icon: '📊',
+    color: 'indigo',
+    defaultProcessTime: 30,
+    defaultLeadTime: 60,
+  },
+  [STEP_TYPES.CUSTOM]: {
+    label: 'Custom',
+    icon: '⚙️',
+    color: 'gray',
+    defaultProcessTime: 60,
+    defaultLeadTime: 120,
+  },
+}
