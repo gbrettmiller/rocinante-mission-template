@@ -14,7 +14,8 @@
     "test:acceptance": "cucumber-js",
     "test:all": "pnpm test && pnpm test:acceptance",
     "test:e2e": "playwright test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
@@ -43,7 +44,9 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.1.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.4.0",
+    "lint-staged": "^16.2.7",
     "postcss": "^8.5.6",
     "prettier": "^3.8.1",
     "prop-types": "^15.8.1",

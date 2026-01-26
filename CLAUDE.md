@@ -30,9 +30,26 @@ This project follows strict **Test-Driven Development**:
 6. **Refactor**: Clean up while keeping tests green
 
 This applies to all levels:
+
 - **Acceptance tests** (Cucumber) - Write feature files before features
 - **Unit tests** (Vitest) - Write test cases before implementing functions
 - **Integration tests** - Write tests before wiring components
+
+## Coding Standards (MANDATORY)
+
+- **Error Handling:** Every `try/catch` must log to `ApplicationInsights` if it's a critical failure.
+- **Naming:** camelCase for variables/functions, PascalCase for classes/interfaces.
+- **Async:** Never use `fs.sync` or `callback` patterns; always use `fs.promises` or `async/await`.
+- **Security:** Sanitize all inputs using `zod` schemas. No `eval()` or `unsafe-inner-html`.
+
+## Pre-Commit Review Checklist
+
+Before any commit, you (the agent) must verify:
+
+1. `npm run lint` passes without errors.
+2. All new functions have an associated unit tests in `tests/`.
+3. No secrets (API Keys, Azure Connection Strings) are in the code.
+4.
 
 ### Workflow Commands
 
@@ -92,6 +109,7 @@ vsm-workshop/
 ### Data Model
 
 A VSM consists of:
+
 1. **Steps** - Individual process stages with timing metrics
 2. **Connections** - Flow between steps (forward and rework loops)
 3. **Queues** - Work waiting between steps
@@ -158,6 +176,7 @@ pnpm preview
 ## Current Phase: MVP (Phase 1)
 
 Focus areas for MVP:
+
 - Basic VSM builder with manual step entry
 - Simple visualization of process flow using React Flow
 - Basic metrics calculation (lead time, process time, flow efficiency)
@@ -167,22 +186,26 @@ Focus areas for MVP:
 ## Architecture Decisions
 
 ### Why React Flow?
+
 - Purpose-built for node-based editors
 - Handles pan, zoom, and connections natively
 - Extensible custom node types
 - Good performance with many nodes
 
 ### Why Zustand?
+
 - Simple API, minimal boilerplate
 - Easy to create multiple stores
 - Built-in devtools support
 
 ### Why Vite?
+
 - Fast HMR for development
 - Optimized production builds
 - Simple configuration
 
 ### Why ATDD?
+
 - Ensures shared understanding of requirements
 - Living documentation
 - Catches requirement issues early

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 1. Run standard linting/testing
+npx lint-staged
+
+# 2. Trigger the Claude Review (Only if a specific env var is set)
+if [ "$CLAUDE_REVIEW" = "true" ]; then
+  echo "🤖 Claude is reviewing your logic..."
+  node scripts/ai-logic-review.js
+fi
