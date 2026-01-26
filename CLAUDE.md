@@ -37,6 +37,31 @@ This applies to all levels:
 
 ## Coding Standards (MANDATORY)
 
+### Functional Programming Style
+
+**CRITICAL: This project uses functional programming exclusively.**
+
+- **NEVER use ES6 classes** - Use factory functions instead (prefix with `create`)
+- **Use closures for state** - Encapsulate state within function scope
+- **Pure functions** - No side effects, no mutations
+- **Composition over inheritance** - Build complexity by combining simple functions
+
+Example:
+```javascript
+// ✅ GOOD - Factory function
+export const createSimulationRunner = () => {
+  let state = {}
+  const start = () => { /* ... */ }
+  return { start }
+}
+
+// ❌ BAD - Never use classes
+export class SimulationRunner {
+  constructor() { this.state = {} }
+  start() { /* ... */ }
+}
+```
+
 ### React Conventions
 - **Components:** Always use functional components with hooks (never class components)
 - **Type Checking:** Use PropTypes for runtime type checking on all components
@@ -46,19 +71,53 @@ This applies to all levels:
 
 ### JavaScript Conventions
 - **Error Handling:** Every `try/catch` must log to `ApplicationInsights` if it's a critical failure.
-- **Naming:** camelCase for variables/functions, PascalCase for components/classes
+- **Naming:** camelCase for variables/functions, PascalCase for React components only
+- **Factory Functions:** Prefix with `create` (e.g., `createSimulationService`)
 - **Async:** Never use `fs.sync` or `callback` patterns; always use `fs.promises` or `async/await`
 - **Security:** Sanitize all inputs using `zod` schemas. No `eval()` or `unsafe-inner-html`
 - **Modern Syntax:** Use ES6+ features (arrow functions, destructuring, spread operator, template literals)
 
+## Quality Verification (MANDATORY)
+
+**After EVERY code change, you MUST run and pass all three quality gates:**
+
+```bash
+pnpm test && pnpm build && pnpm lint
+```
+
+### Three Quality Gates
+
+1. **Tests Must Pass** (`pnpm test`)
+   - All unit tests green
+   - No regressions
+   - Business logic verified
+
+2. **Build Must Succeed** (`pnpm build`)
+   - No import/export errors
+   - Code bundles for production
+   - All dependencies resolved
+
+3. **Lint Must Pass** (`pnpm lint`)
+   - Code style consistent
+   - ESLint rules satisfied
+   - No obvious code smells
+
+**If ANY check fails, the change is NOT complete.** Fix and re-run all checks.
+
+See `.claude/rules/quality-verification.md` for complete details.
+
 ## Pre-Commit Review Checklist
 
-Before any commit, you (the agent) must verify:
+Before any commit, verify:
 
-1. `npm run lint` passes without errors.
-2. All new functions have an associated unit tests in `tests/`.
-3. No secrets (API Keys, Azure Connection Strings) are in the code.
-4. All tests pass before committing.
+- [ ] `pnpm test` passes (all tests green)
+- [ ] `pnpm build` succeeds (no errors)
+- [ ] `pnpm lint` passes (no errors)
+- [ ] All new functions have unit tests
+- [ ] No classes used (functional style only)
+- [ ] No secrets in code (API keys, connection strings)
+- [ ] No debugging code (console.log, debugger)
+- [ ] No commented-out code
 
 ### Workflow Commands
 

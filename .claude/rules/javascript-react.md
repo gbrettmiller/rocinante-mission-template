@@ -13,6 +13,45 @@ Prettier runs automatically on save and pre-commit. Do not manually format code.
 
 ## JavaScript
 
+### Functional Programming Style
+
+**CRITICAL: This project uses functional programming style exclusively.**
+
+- **NEVER use ES6 classes** - Use factory functions that return objects with methods
+- **Use closures for state management** - Encapsulate state in function scope
+- **Use pure functions** - Functions should not mutate arguments or have side effects
+- **Prefer composition over inheritance** - Build complex behavior by combining simple functions
+
+#### Factory Function Pattern
+
+Instead of classes, use factory functions:
+
+```javascript
+// ❌ BAD - Do not use classes
+export class SimulationRunner {
+  constructor() {
+    this.state = {}
+  }
+
+  start() {
+    // ...
+  }
+}
+
+// ✅ GOOD - Use factory functions
+export const createSimulationRunner = () => {
+  let state = {}
+
+  const start = () => {
+    // ...
+  }
+
+  return {
+    start,
+  }
+}
+```
+
 ### Modern ES6+ Syntax
 
 - Use `const` by default, `let` when reassignment is needed
@@ -24,9 +63,10 @@ Prettier runs automatically on save and pre-commit. Do not manually format code.
 
 ### Naming Conventions
 
-- PascalCase for components and classes
+- PascalCase for React components
 - camelCase for variables, functions, and properties
 - SCREAMING_SNAKE_CASE for constants
+- Factory functions: prefix with `create` (e.g., `createSimulationRunner`)
 - Prefix props interfaces with component name in comments
 
 ### JSDoc Comments

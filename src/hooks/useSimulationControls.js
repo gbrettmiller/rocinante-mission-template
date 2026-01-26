@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useSimulationStore } from '../stores/simulationStore'
-import { SimulationService } from '../services/SimulationService'
+import { createSimulationService } from '../services/SimulationService'
 
 export function useSimulationControls() {
   const serviceRef = useRef(null)
@@ -16,7 +16,7 @@ export function useSimulationControls() {
 
   // Initialize service once
   if (serviceRef.current == null) {
-    serviceRef.current = new SimulationService()
+    serviceRef.current = createSimulationService()
   }
 
   // Cleanup on unmount

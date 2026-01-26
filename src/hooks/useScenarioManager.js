@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { useSimulationStore } from '../stores/simulationStore'
-import { SimulationService } from '../services/SimulationService'
+import { createSimulationService } from '../services/SimulationService'
 
 export function useScenarioManager() {
   const serviceRef = useRef(null)
@@ -15,7 +15,7 @@ export function useScenarioManager() {
 
   // Initialize service once
   if (serviceRef.current == null) {
-    serviceRef.current = new SimulationService()
+    serviceRef.current = createSimulationService()
   }
 
   // Create scenario

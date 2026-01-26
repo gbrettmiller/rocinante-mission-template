@@ -1,74 +1,9 @@
 // ==============================================================================
-// DOMAIN SERVICE - ValueStreamAnalyzer
+// PRIMARY API - Use these functions as entry points
 // ==============================================================================
 
 // Time constants
 const MINUTES_PER_WORK_DAY = 480
-
-/**
- * ValueStreamAnalyzer - Domain service for analyzing value stream metrics
- * Encapsulates all domain operations for calculating VSM metrics and insights
- */
-export class ValueStreamAnalyzer {
-  constructor(steps, connections = []) {
-    this.steps = steps || []
-    this.connections = connections || []
-  }
-
-  /**
-   * Analyze the value stream and return all metrics
-   * @returns {Object} Complete analysis with all metrics
-   */
-  analyze() {
-    return {
-      totalLeadTime: this.calculateTotalLeadTime(),
-      totalProcessTime: this.calculateTotalProcessTime(),
-      flowEfficiency: this.calculateFlowEfficiency(),
-      firstPassYield: this.calculateFirstPassYield(),
-      stepCount: this.steps.length,
-      totalQueueSize: this.calculateTotalQueueSize(),
-      activityRatio: this.calculateActivityRatio(),
-      reworkImpact: this.calculateReworkImpact(),
-      bottleneckIds: this.identifyBottlenecks(),
-    }
-  }
-
-  calculateTotalLeadTime() {
-    return calculateTotalLeadTime(this.steps)
-  }
-
-  calculateTotalProcessTime() {
-    return calculateTotalProcessTime(this.steps)
-  }
-
-  calculateFlowEfficiency() {
-    return calculateFlowEfficiency(this.steps)
-  }
-
-  calculateFirstPassYield() {
-    return calculateFirstPassYield(this.steps)
-  }
-
-  calculateTotalQueueSize() {
-    return calculateTotalQueueSize(this.steps)
-  }
-
-  calculateActivityRatio() {
-    return calculateActivityRatio(this.steps)
-  }
-
-  calculateReworkImpact() {
-    return calculateReworkImpact(this.steps, this.connections)
-  }
-
-  identifyBottlenecks() {
-    return identifyBottlenecks(this.steps)
-  }
-}
-
-// ==============================================================================
-// PRIMARY API - Use these functions as entry points
-// ==============================================================================
 
 /**
  * Calculate all metrics for a value stream (Main facade function)
@@ -76,9 +11,18 @@ export class ValueStreamAnalyzer {
  * @param {Array} connections - Array of connections between steps
  * @returns {Object} All calculated metrics
  */
-export function calculateMetrics(steps, connections = []) {
-  const analyzer = new ValueStreamAnalyzer(steps, connections)
-  return analyzer.analyze()
+export function calculateMetrics(steps = [], connections = []) {
+  return {
+    totalLeadTime: calculateTotalLeadTime(steps),
+    totalProcessTime: calculateTotalProcessTime(steps),
+    flowEfficiency: calculateFlowEfficiency(steps),
+    firstPassYield: calculateFirstPassYield(steps),
+    stepCount: steps.length,
+    totalQueueSize: calculateTotalQueueSize(steps),
+    activityRatio: calculateActivityRatio(steps),
+    reworkImpact: calculateReworkImpact(steps, connections),
+    bottleneckIds: identifyBottlenecks(steps),
+  }
 }
 
 /**

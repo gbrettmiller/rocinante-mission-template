@@ -4,22 +4,50 @@ import {
   initSimulation,
   generateWorkItems,
 } from '../utils/simulation/simulationEngine'
-import { SimulationRunner } from '../utils/simulation/SimulationRunner'
-import { ComparisonEngine } from '../utils/simulation/ComparisonEngine'
+import { createSimulationRunner } from '../utils/simulation/SimulationRunner'
+import { createComparisonEngine } from '../utils/simulation/ComparisonEngine'
+
+/**
+ * Run simulation for scenario and calculate improvements
+ * @param {Object} vsmState - Current VSM state
+ * @param {Object} scenario - Scenario to compare
+ * @param {number} workItemCount - Number of work items
+ * @returns {Object} Comparison results
+ */
+const runSimulationForScenario = (vsmState, scenario, workItemCount) => {
+  const engine = createComparisonEngine(workItemCount)
+
+  const baselineResults = engine.runBaseline(
+    vsmState.steps,
+    vsmState.connections
+  )
+
+  const scenarioResults = engine.runScenario(
+    scenario.steps,
+    scenario.connections
+  )
+
+  const improvements = engine.calculateImprovements(
+    baselineResults,
+    scenarioResults
+  )
+
+  return {
+    baseline: baselineResults,
+    scenario: scenarioResults,
+    improvements,
+  }
+}
 
 /**
  * SimulationService - Domain service that coordinates between VSM and Simulation domains
  * Decouples application logic from direct store orchestration
  */
-export class SimulationService {
-  constructor(runner = new SimulationRunner()) {
-    this.runner = runner
-  }
-
+export const createSimulationService = (runner = createSimulationRunner()) => {
   /**
    * Start a new simulation run
    */
-  startSimulation() {
+  const startSimulation = () => {
     const vsmState = useVsmStore.getState()
     const simState = useSimulationStore.getState()
 
@@ -39,7 +67,7 @@ export class SimulationService {
     simState.setResults(null)
     simState.setRunning(true)
 
-    this.runner.start(initialState, steps, connections, {
+    runner.start(initialState, steps, connections, {
       onTick: (newState) => {
         const simState = useSimulationStore.getState()
         simState.updateWorkItems(newState.workItems)
@@ -62,27 +90,27 @@ export class SimulationService {
   /**
    * Pause the running simulation
    */
-  pauseSimulation() {
+  const pauseSimulation = () => {
     const simState = useSimulationStore.getState()
     simState.setPaused(true)
-    this.runner.pause()
+    runner.pause()
   }
 
   /**
    * Resume a paused simulation
    */
-  resumeSimulation() {
+  const resumeSimulation = () => {
     const simState = useSimulationStore.getState()
     simState.setPaused(false)
     simState.setRunning(true)
-    this.runner.resume()
+    runner.resume()
   }
 
   /**
    * Stop and reset the simulation
    */
-  resetSimulation() {
-    this.runner.stop()
+  const resetSimulation = () => {
+    runner.stop()
     const simState = useSimulationStore.getState()
     simState.reset()
   }
@@ -90,7 +118,7 @@ export class SimulationService {
   /**
    * Create a new scenario from current VSM state
    */
-  createScenario() {
+  const createScenario = () => {
     const vsmState = useVsmStore.getState()
     const simState = useSimulationStore.getState()
 
@@ -109,14 +137,14 @@ export class SimulationService {
   /**
    * Run comparison between baseline and scenario
    */
-  runComparison(scenarioId) {
+  const runComparison = (scenarioId) => {
     const vsmState = useVsmStore.getState()
     const simState = useSimulationStore.getState()
 
     const scenario = simState.scenarios.find((s) => s.id === scenarioId)
     if (!scenario) return
 
-    const results = this._runSimulationForScenario(
+    const results = runSimulationForScenario(
       vsmState,
       scenario,
       simState.workItemCount
@@ -126,38 +154,19 @@ export class SimulationService {
   }
 
   /**
-   * Run simulation for scenario and calculate improvements
-   * @private
-   */
-  _runSimulationForScenario(vsmState, scenario, workItemCount) {
-    const engine = new ComparisonEngine(workItemCount)
-
-    const baselineResults = engine.runBaseline(
-      vsmState.steps,
-      vsmState.connections
-    )
-
-    const scenarioResults = engine.runScenario(
-      scenario.steps,
-      scenario.connections
-    )
-
-    const improvements = engine.calculateImprovements(
-      baselineResults,
-      scenarioResults
-    )
-
-    return {
-      baseline: baselineResults,
-      scenario: scenarioResults,
-      improvements,
-    }
-  }
-
-  /**
    * Cleanup resources
    */
-  cleanup() {
-    this.runner.stop()
+  const cleanup = () => {
+    runner.stop()
+  }
+
+  return {
+    startSimulation,
+    pauseSimulation,
+    resumeSimulation,
+    resetSimulation,
+    createScenario,
+    runComparison,
+    cleanup,
   }
 }
