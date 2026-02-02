@@ -11,8 +11,8 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    // Don't optimize @xyflow/svelte to preserve its original compilation
-    exclude: ['@xyflow/svelte'],
+    // Include @xyflow/svelte for proper dependency optimization
+    include: ['@xyflow/svelte'],
   },
   test: {
     environment: 'jsdom',
