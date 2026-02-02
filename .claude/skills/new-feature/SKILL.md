@@ -1,3 +1,10 @@
+---
+name: new-feature
+description: Create a new feature file for ATDD workflow - must be done BEFORE any implementation
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob
+---
+
 # Skill: Create New Feature
 
 Create a new feature file for ATDD workflow. This must be done BEFORE any implementation.

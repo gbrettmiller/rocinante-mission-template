@@ -1,3 +1,10 @@
+---
+name: new-component
+description: Create a new React component following project conventions with PropTypes and test attributes
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob
+---
+
 # Skill: Create New Component
 
 Create a new React component following project conventions.

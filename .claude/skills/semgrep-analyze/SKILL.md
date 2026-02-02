@@ -1,3 +1,10 @@
+---
+name: semgrep-analyze
+description: Analyze code with Semgrep for security vulnerabilities and code quality issues, then create a prioritized fix plan
+user-invocable: true
+allowed-tools: Bash, Read, Write, Grep, Glob
+---
+
 # Skill: Semgrep Analyze
 
 Analyze code with Semgrep and plan fixes for identified issues.

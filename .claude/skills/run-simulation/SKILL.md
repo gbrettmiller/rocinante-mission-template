@@ -1,3 +1,10 @@
+---
+name: run-simulation
+description: Create or run simulation features for analyzing work flow through value streams
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+---
+
 # Skill: Create Simulation Feature
 
 Add a new simulation or what-if scenario feature.

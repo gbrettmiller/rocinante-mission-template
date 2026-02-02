@@ -1,3 +1,10 @@
+---
+name: add-metric
+description: Add a new calculated metric to the VSM dashboard with test-first development
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+---
+
 # Skill: Add New Metric
 
 Add a new calculated metric to the VSM dashboard.

@@ -1,3 +1,10 @@
+---
+name: implement-feature
+description: Implement an approved feature file using ATDD workflow with test-first development
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+---
+
 # Skill: Implement Feature
 
 Implement an approved feature using ATDD workflow.

@@ -1,3 +1,10 @@
+---
+name: new-process-step
+description: Add a new type of process step to the VSM builder with custom visualization
+user-invocable: true
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+---
+
 # Skill: Add New Process Step Type
 
 Add a new type of process step to the VSM builder.
