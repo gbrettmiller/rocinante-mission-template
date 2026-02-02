@@ -1,4 +1,4 @@
-import { STEP_TYPES } from './stepTypes'
+import { STEP_TYPES } from './stepTypes.js'
 
 export const TEMPLATE_CATEGORIES = {
   SOFTWARE: 'software',

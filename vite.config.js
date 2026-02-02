@@ -1,8 +1,19 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    svelte({
+      // Don't compile node_modules packages with runes mode
+      compilerOptions: {
+        // Per-component runes detection
+      },
+    }),
+  ],
+  optimizeDeps: {
+    // Don't optimize @xyflow/svelte to preserve its original compilation
+    exclude: ['@xyflow/svelte'],
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -14,14 +25,14 @@ export default defineConfig({
       output: {
         manualChunks(moduleId) {
           if (moduleId.includes('node_modules')) {
-            if (moduleId.includes('reactflow')) {
-              return 'vendor_reactflow';
+            if (moduleId.includes('@xyflow/svelte')) {
+              return 'vendor_xyflow'
             }
-            if (moduleId.includes('recharts')) {
-              return 'vendor_recharts';
+            if (moduleId.includes('layerchart') || moduleId.includes('d3')) {
+              return 'vendor_charts'
             }
-            if (moduleId.includes('react') || moduleId.includes('react-dom')) {
-              return 'vendor_react';
+            if (moduleId.includes('svelte')) {
+              return 'vendor_svelte'
             }
           }
         },

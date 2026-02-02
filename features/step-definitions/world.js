@@ -1,32 +1,42 @@
 import { setWorldConstructor, World } from '@cucumber/cucumber'
-import { useVsmStore } from '../../src/stores/vsmStore.js'
-import { useSimulationStore } from '../../src/stores/simulationStore.js'
+import {
+  vsmDataStore,
+  vsmUIStore,
+  simControlStore,
+  simDataStore,
+  scenarioStore,
+} from './helpers/testStores.js'
 import { VSMTestHelper } from './helpers/VSMTestHelper.js'
 import { SimulationTestHelper } from './helpers/SimulationTestHelper.js'
-
-// Get the initial state from the stores to reset them for each scenario
-const vsmInitialState = useVsmStore.getState()
-const simInitialState = useSimulationStore.getState()
 
 class VSMWorld extends World {
   constructor(options) {
     super(options)
-    // Reset stores before each scenario
-    useVsmStore.setState(vsmInitialState, true)
-    useSimulationStore.setState(simInitialState, true)
+    // Reset all stores before each scenario
+    vsmDataStore.clearMap()
+    vsmUIStore.clearUIState()
+    simControlStore.reset()
+    simDataStore.reset()
+    scenarioStore.reset()
+
+    // Reset workItemCount to default
+    simDataStore.setWorkItemCount(10)
 
     // Verify stores are in clean state
-    const vsmState = useVsmStore.getState()
-    const simState = useSimulationStore.getState()
-
-    if (vsmState.steps.length !== 0) {
-      throw new Error('VSM store was not properly reset: steps array is not empty')
+    if (vsmDataStore.steps.length !== 0) {
+      throw new Error(
+        'VSM store was not properly reset: steps array is not empty'
+      )
     }
-    if (vsmState.connections.length !== 0) {
-      throw new Error('VSM store was not properly reset: connections array is not empty')
+    if (vsmDataStore.connections.length !== 0) {
+      throw new Error(
+        'VSM store was not properly reset: connections array is not empty'
+      )
     }
-    if (simState.workItems.length !== 0) {
-      throw new Error('Simulation store was not properly reset: workItems array is not empty')
+    if (simDataStore.workItems.length !== 0) {
+      throw new Error(
+        'Simulation store was not properly reset: workItems array is not empty'
+      )
     }
 
     // Initialize concern-based operations objects

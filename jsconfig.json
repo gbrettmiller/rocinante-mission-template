@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "module": "ESNext",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "checkJs": true,
+    "types": ["svelte", "vite/client"]
+  },
+  "include": ["src/**/*.js", "src/**/*.svelte", "src/**/*.svelte.js"],
+  "exclude": ["node_modules"]
+}

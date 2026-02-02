@@ -62,7 +62,7 @@ export const useVsmIOStore = create(() => ({
   loadTemplate: (template) => {
     const now = new Date().toISOString()
     const newSteps = template.steps.map((step) => {
-      const { position, ...domainData } = step
+      const { position: _position, ...domainData } = step
       return {
         ...domainData,
         id: crypto.randomUUID(),
