@@ -15,7 +15,7 @@ import { useVsmIOStore } from './vsmIOStore.js'
  * Components can use this unified store for backward compatibility,
  * or access individual stores directly for better separation.
  */
-export const useVsmStore = create((set, get) => ({
+export const useVsmStore = create(() => ({
   // Proxy getters to data store
   get id() {
     return useVsmDataStore.getState().id

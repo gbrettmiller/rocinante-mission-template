@@ -10,22 +10,25 @@
 What do you want to do?
 
 ├─ Create a new feature from scratch
-│  └─> Use: /new-feature or skills/new-feature.md
+│  └─> Use: /new-feature
 │
 ├─ Implement an already-approved feature file
-│  └─> Use: /implement-feature or skills/implement-feature.md
+│  └─> Use: /implement-feature
 │
 ├─ Add a new React component
-│  └─> Use: /new-component or skills/new-component.md
+│  └─> Use: /new-component
 │
 ├─ Add a metrics calculation
-│  └─> Use: /add-metric or skills/add-metric.md
+│  └─> Use: /add-metric
 │
 ├─ Add a new VSM step type
-│  └─> Use: /new-process-step or skills/new-process-step.md
+│  └─> Use: /new-process-step
 │
-└─ Run or debug simulation
-   └─> Use: /run-simulation or skills/run-simulation.md
+├─ Run or debug simulation
+│  └─> Use: /run-simulation
+│
+└─ Analyze code for security/quality issues
+   └─> Use: /semgrep-analyze
 ```
 
 ---
@@ -183,6 +186,32 @@ What do you want to do?
 
 ---
 
+### 7. semgrep-analyze
+
+**When to use:**
+- Analyzing code for security vulnerabilities
+- Finding code quality issues
+- Auditing codebase before release
+- Planning fixes for identified problems
+
+**What it does:**
+1. Checks/installs Semgrep
+2. Runs analysis with appropriate rules
+3. Documents all findings
+4. Creates prioritized fix plan
+5. Provides code fixes for each issue
+
+**Prerequisites:**
+- Python/pip available for installation
+- Understanding of security concepts (helpful)
+
+**Example tasks:**
+- "Analyze code for security issues"
+- "Run OWASP Top 10 audit"
+- "Find and fix code quality problems"
+
+---
+
 ## 🗺️ Task-Based Selection
 
 ### "I want to add..."
@@ -203,6 +232,7 @@ What do you want to do?
 | Build a form | **new-component** |
 | Show a new metric | **add-metric** |
 | Test work flow | **run-simulation** |
+| Analyze code security | **semgrep-analyze** |
 
 ### "How do I..."
 
@@ -213,6 +243,7 @@ What do you want to do?
 | Build UI | **new-component** |
 | Visualize a metric | **add-metric** + **new-component** |
 | Test scenarios | **run-simulation** |
+| Find security issues | **semgrep-analyze** |
 
 ---
 
@@ -240,14 +271,15 @@ What do you want to do?
 
 ## 📖 Skill File Locations
 
-All skill files are in `.claude/skills/`:
+All skills are in `.claude/skills/<skill-name>/SKILL.md`:
 
-- `new-feature.md` - Feature creation workflow
-- `implement-feature.md` - Feature implementation workflow
-- `new-component.md` - Component creation workflow
-- `add-metric.md` - Metric addition workflow
-- `new-process-step.md` - Process step addition workflow
-- `run-simulation.md` - Simulation running workflow
+- `new-feature/SKILL.md` - Feature creation workflow
+- `implement-feature/SKILL.md` - Feature implementation workflow
+- `new-component/SKILL.md` - Component creation workflow
+- `add-metric/SKILL.md` - Metric addition workflow
+- `new-process-step/SKILL.md` - Process step addition workflow
+- `run-simulation/SKILL.md` - Simulation running workflow
+- `semgrep-analyze/SKILL.md` - Security and code quality analysis
 
 ---
 

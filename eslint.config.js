@@ -1,31 +1,37 @@
 import js from '@eslint/js'
 import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import svelte from 'eslint-plugin-svelte'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', '.svelte-kit'] },
+  js.configs.recommended,
+  ...svelte.configs['flat/recommended'],
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,svelte}'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.node,
       },
     },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
+      'no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
       ],
+    },
+  },
+  {
+    files: ['**/*.svelte', '**/*.svelte.js'],
+    languageOptions: {
+      parserOptions: {
+        parser: null,
+      },
     },
   },
 ]

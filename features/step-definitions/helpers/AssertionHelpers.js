@@ -117,10 +117,12 @@ export function assertDisplayValue(actual, expected) {
 /**
  * Assert that rework multiplier matches expected value
  * @param {Object} reworkImpact - Rework impact result
- * @param {string} expectedMultiplier - Expected multiplier string
+ * @param {string} expectedMultiplier - Expected multiplier string (e.g., "1.25x")
  */
 export function assertReworkMultiplier(reworkImpact, expectedMultiplier) {
-  expect(`${reworkImpact.reworkMultiplier}x`).to.include(expectedMultiplier)
+  // Format the multiplier to match expected precision and compare exactly
+  const actualMultiplier = `${reworkImpact.reworkMultiplier}x`
+  expect(actualMultiplier).to.equal(expectedMultiplier)
 }
 
 /**

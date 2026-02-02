@@ -1,195 +1,150 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  useSimulationControlStore,
-  useSimulationDataStore,
-  useScenarioStore,
-} from '../../../src/stores/simulationStore'
 
-describe('simulationStore', () => {
+// Import the new Svelte stores
+import { simControlStore } from '../../../src/stores/simulationControlStore.svelte.js'
+import { simDataStore } from '../../../src/stores/simulationDataStore.svelte.js'
+import { scenarioStore } from '../../../src/stores/scenarioStore.svelte.js'
+
+describe('simulationStore (Svelte)', () => {
   beforeEach(() => {
     // Reset all stores before each test
-    useSimulationControlStore.setState({
-      isRunning: false,
-      isPaused: false,
-      speed: 1.0,
-    })
-    useSimulationDataStore.setState({
-      workItemCount: 10,
-      workItems: [],
-      completedCount: 0,
-      elapsedTime: 0,
-      queueSizesByStepId: {},
-      queueHistory: [],
-      detectedBottlenecks: [],
-      results: null,
-    })
-    useScenarioStore.setState({
-      scenarios: [],
-      activeScenarioId: null,
-      comparisonResults: null,
-    })
+    simControlStore.reset()
+    simDataStore.reset()
+    scenarioStore.reset()
+    // Reset workItemCount since reset() preserves it
+    simDataStore.setWorkItemCount(10)
+    // Reset speed since reset() preserves it
+    simControlStore.setSpeed(1.0)
   })
 
   describe('initial state', () => {
     it('has correct default values', () => {
-      const controlState = useSimulationControlStore.getState()
-      const dataState = useSimulationDataStore.getState()
-
-      expect(controlState.isRunning).toBe(false)
-      expect(controlState.isPaused).toBe(false)
-      expect(controlState.speed).toBe(1.0)
-      expect(dataState.workItemCount).toBe(10)
-      expect(dataState.workItems).toEqual([])
-      expect(dataState.completedCount).toBe(0)
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simControlStore.isPaused).toBe(false)
+      expect(simControlStore.speed).toBe(1.0)
+      expect(simDataStore.workItemCount).toBe(10)
+      expect(simDataStore.workItems).toEqual([])
+      expect(simDataStore.completedCount).toBe(0)
     })
   })
 
   describe('setRunning', () => {
     it('sets isRunning to true', () => {
-      const { setRunning } = useSimulationControlStore.getState()
+      simControlStore.setRunning(true)
 
-      setRunning(true)
-
-      expect(useSimulationControlStore.getState().isRunning).toBe(true)
+      expect(simControlStore.isRunning).toBe(true)
     })
 
     it('clears isPaused when starting', () => {
-      useSimulationControlStore.setState({ isPaused: true })
-      const { setRunning } = useSimulationControlStore.getState()
+      simControlStore.setPaused(true)
 
-      setRunning(true)
+      simControlStore.setRunning(true)
 
-      expect(useSimulationControlStore.getState().isPaused).toBe(false)
+      expect(simControlStore.isPaused).toBe(false)
     })
   })
 
   describe('setPaused', () => {
     it('sets isPaused to true', () => {
-      const { setPaused } = useSimulationControlStore.getState()
+      simControlStore.setPaused(true)
 
-      setPaused(true)
-
-      expect(useSimulationControlStore.getState().isPaused).toBe(true)
+      expect(simControlStore.isPaused).toBe(true)
     })
 
     it('sets isRunning to false when pausing', () => {
-      useSimulationControlStore.setState({ isRunning: true })
-      const { setPaused } = useSimulationControlStore.getState()
+      simControlStore.setRunning(true)
 
-      setPaused(true)
+      simControlStore.setPaused(true)
 
-      expect(useSimulationControlStore.getState().isRunning).toBe(false)
+      expect(simControlStore.isRunning).toBe(false)
     })
   })
 
   describe('setSpeed', () => {
     it('sets simulation speed', () => {
-      const { setSpeed } = useSimulationControlStore.getState()
+      simControlStore.setSpeed(2.0)
 
-      setSpeed(2.0)
-
-      expect(useSimulationControlStore.getState().speed).toBe(2.0)
+      expect(simControlStore.speed).toBe(2.0)
     })
 
     it('clamps speed to minimum of 0.25', () => {
-      const { setSpeed } = useSimulationControlStore.getState()
+      simControlStore.setSpeed(0.1)
 
-      setSpeed(0.1)
-
-      expect(useSimulationControlStore.getState().speed).toBe(0.25)
+      expect(simControlStore.speed).toBe(0.25)
     })
 
     it('clamps speed to maximum of 4.0', () => {
-      const { setSpeed } = useSimulationControlStore.getState()
+      simControlStore.setSpeed(10)
 
-      setSpeed(10)
-
-      expect(useSimulationControlStore.getState().speed).toBe(4.0)
+      expect(simControlStore.speed).toBe(4.0)
     })
   })
 
   describe('setWorkItemCount', () => {
     it('sets work item count', () => {
-      const { setWorkItemCount } = useSimulationDataStore.getState()
+      simDataStore.setWorkItemCount(20)
 
-      setWorkItemCount(20)
-
-      expect(useSimulationDataStore.getState().workItemCount).toBe(20)
+      expect(simDataStore.workItemCount).toBe(20)
     })
 
     it('does not allow negative values', () => {
-      const { setWorkItemCount } = useSimulationDataStore.getState()
+      simDataStore.setWorkItemCount(-5)
 
-      setWorkItemCount(-5)
-
-      expect(useSimulationDataStore.getState().workItemCount).toBe(0)
+      expect(simDataStore.workItemCount).toBe(0)
     })
   })
 
   describe('updateWorkItems', () => {
     it('updates work items array', () => {
-      const { updateWorkItems } = useSimulationDataStore.getState()
       const items = [{ id: '1', progress: 50 }]
 
-      updateWorkItems(items)
+      simDataStore.updateWorkItems(items)
 
-      expect(useSimulationDataStore.getState().workItems).toEqual(items)
+      expect(simDataStore.workItems).toEqual(items)
     })
   })
 
   describe('incrementCompletedCount', () => {
     it('increments completed count', () => {
-      const { incrementCompletedCount } = useSimulationDataStore.getState()
+      simDataStore.incrementCompletedCount()
+      simDataStore.incrementCompletedCount()
 
-      incrementCompletedCount()
-      incrementCompletedCount()
-
-      expect(useSimulationDataStore.getState().completedCount).toBe(2)
+      expect(simDataStore.completedCount).toBe(2)
     })
   })
 
   describe('updateQueueSizes', () => {
     it('updates queue sizes map', () => {
-      const { updateQueueSizes } = useSimulationDataStore.getState()
       const queueSizesByStepId = { 'step-1': 5, 'step-2': 3 }
 
-      updateQueueSizes(queueSizesByStepId)
+      simDataStore.updateQueueSizes(queueSizesByStepId)
 
-      expect(useSimulationDataStore.getState().queueSizesByStepId).toEqual(
-        queueSizesByStepId
-      )
+      expect(simDataStore.queueSizesByStepId).toEqual(queueSizesByStepId)
     })
   })
 
   describe('addQueueHistoryEntry', () => {
     it('adds entry to queue history', () => {
-      const { addQueueHistoryEntry } = useSimulationDataStore.getState()
       const entry = { tick: 1, stepId: 'step-1', queueSize: 5 }
 
-      addQueueHistoryEntry(entry)
+      simDataStore.addQueueHistoryEntry(entry)
 
-      expect(useSimulationDataStore.getState().queueHistory).toContainEqual(
-        entry
-      )
+      expect(simDataStore.queueHistory).toContainEqual(entry)
     })
   })
 
   describe('setDetectedBottlenecks', () => {
     it('updates detected bottlenecks array', () => {
-      const { setDetectedBottlenecks } = useSimulationDataStore.getState()
       const bottlenecks = ['step-1', 'step-2']
 
-      setDetectedBottlenecks(bottlenecks)
+      simDataStore.setDetectedBottlenecks(bottlenecks)
 
-      expect(useSimulationDataStore.getState().detectedBottlenecks).toEqual(
-        bottlenecks
-      )
+      expect(simDataStore.detectedBottlenecks).toEqual(bottlenecks)
     })
   })
 
   describe('setResults', () => {
     it('sets simulation results', () => {
-      const { setResults } = useSimulationDataStore.getState()
       const results = {
         completedCount: 10,
         avgLeadTime: 150,
@@ -197,54 +152,44 @@ describe('simulationStore', () => {
         bottlenecks: [],
       }
 
-      setResults(results)
+      simDataStore.setResults(results)
 
-      expect(useSimulationDataStore.getState().results).toEqual(results)
+      expect(simDataStore.results).toEqual(results)
     })
   })
 
   describe('reset', () => {
     it('resets all simulation state', () => {
-      useSimulationControlStore.setState({
-        isRunning: true,
-        isPaused: true,
-      })
-      useSimulationDataStore.setState({
-        completedCount: 10,
-        workItems: [{ id: '1' }],
-        elapsedTime: 100,
-        queueHistory: [{ tick: 1 }],
-      })
+      simControlStore.setRunning(true)
+      simControlStore.setPaused(true)
+      simDataStore.setCompletedCount(10)
+      simDataStore.updateWorkItems([{ id: '1' }])
+      simDataStore.updateElapsedTime(100)
+      simDataStore.addQueueHistoryEntry({ tick: 1 })
 
-      const { reset: resetControl } = useSimulationControlStore.getState()
-      const { reset: resetData } = useSimulationDataStore.getState()
-      resetControl()
-      resetData()
+      simControlStore.reset()
+      simDataStore.reset()
 
-      const controlState = useSimulationControlStore.getState()
-      const dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(false)
-      expect(controlState.isPaused).toBe(false)
-      expect(dataState.completedCount).toBe(0)
-      expect(dataState.workItems).toEqual([])
-      expect(dataState.elapsedTime).toBe(0)
-      expect(dataState.queueHistory).toEqual([])
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simControlStore.isPaused).toBe(false)
+      expect(simDataStore.completedCount).toBe(0)
+      expect(simDataStore.workItems).toEqual([])
+      expect(simDataStore.elapsedTime).toBe(0)
+      expect(simDataStore.queueHistory).toEqual([])
     })
 
     it('preserves workItemCount on reset', () => {
-      useSimulationDataStore.setState({ workItemCount: 25 })
+      simDataStore.setWorkItemCount(25)
 
-      const { reset } = useSimulationDataStore.getState()
-      reset()
+      simDataStore.reset()
 
-      expect(useSimulationDataStore.getState().workItemCount).toBe(25)
+      expect(simDataStore.workItemCount).toBe(25)
     })
   })
 
   describe('scenarios', () => {
     describe('addScenario', () => {
       it('adds a new scenario', () => {
-        const { addScenario } = useScenarioStore.getState()
         const scenario = {
           id: 'scenario-1',
           name: 'Test Scenario',
@@ -252,25 +197,20 @@ describe('simulationStore', () => {
           connections: [],
         }
 
-        addScenario(scenario)
+        scenarioStore.addScenario(scenario)
 
-        expect(useScenarioStore.getState().scenarios).toContainEqual(scenario)
+        expect(scenarioStore.scenarios).toContainEqual(scenario)
       })
     })
 
     describe('removeScenario', () => {
       it('removes a scenario by id', () => {
-        useScenarioStore.setState({
-          scenarios: [
-            { id: 'scenario-1', name: 'Test 1' },
-            { id: 'scenario-2', name: 'Test 2' },
-          ],
-        })
+        scenarioStore.addScenario({ id: 'scenario-1', name: 'Test 1' })
+        scenarioStore.addScenario({ id: 'scenario-2', name: 'Test 2' })
 
-        const { removeScenario } = useScenarioStore.getState()
-        removeScenario('scenario-1')
+        scenarioStore.removeScenario('scenario-1')
 
-        const scenarios = useScenarioStore.getState().scenarios
+        const scenarios = scenarioStore.scenarios
         expect(scenarios).toHaveLength(1)
         expect(scenarios[0].id).toBe('scenario-2')
       })
@@ -278,104 +218,78 @@ describe('simulationStore', () => {
 
     describe('setActiveScenario', () => {
       it('sets the active scenario id', () => {
-        const { setActiveScenario } = useScenarioStore.getState()
+        scenarioStore.setActiveScenario('scenario-1')
 
-        setActiveScenario('scenario-1')
-
-        expect(useScenarioStore.getState().activeScenarioId).toBe('scenario-1')
+        expect(scenarioStore.activeScenarioId).toBe('scenario-1')
       })
     })
 
     describe('setComparisonResults', () => {
       it('sets comparison results', () => {
-        const { setComparisonResults } = useScenarioStore.getState()
         const comparison = {
           baseline: { avgLeadTime: 100 },
           scenario: { avgLeadTime: 80 },
           improvement: { leadTime: 20 },
         }
 
-        setComparisonResults(comparison)
+        scenarioStore.setComparisonResults(comparison)
 
-        expect(useScenarioStore.getState().comparisonResults).toEqual(
-          comparison
-        )
+        expect(scenarioStore.comparisonResults).toEqual(comparison)
       })
     })
   })
 
   describe('integration: simulation lifecycle', () => {
     it('completes full simulation lifecycle: start → pause → resume → complete', () => {
-      const { setRunning, setPaused } = useSimulationControlStore.getState()
-      const {
-        updateWorkItems,
-        incrementCompletedCount,
-        updateQueueSizes,
-        addQueueHistoryEntry,
-        setResults,
-        reset: resetData,
-      } = useSimulationDataStore.getState()
-      const { reset: resetControl } = useSimulationControlStore.getState()
-
       // Initial state
-      let controlState = useSimulationControlStore.getState()
-      let dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(false)
-      expect(controlState.isPaused).toBe(false)
-      expect(dataState.completedCount).toBe(0)
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simControlStore.isPaused).toBe(false)
+      expect(simDataStore.completedCount).toBe(0)
 
       // Start simulation
-      setRunning(true)
-      controlState = useSimulationControlStore.getState()
-      expect(controlState.isRunning).toBe(true)
-      expect(controlState.isPaused).toBe(false)
+      simControlStore.setRunning(true)
+      expect(simControlStore.isRunning).toBe(true)
+      expect(simControlStore.isPaused).toBe(false)
 
       // Simulate some progress
-      updateWorkItems([
+      simDataStore.updateWorkItems([
         { id: '1', progress: 50 },
         { id: '2', progress: 25 },
       ])
-      updateQueueSizes({ 'step-1': 3, 'step-2': 2 })
-      addQueueHistoryEntry({ tick: 1, stepId: 'step-1', queueSize: 3 })
-      incrementCompletedCount()
+      simDataStore.updateQueueSizes({ 'step-1': 3, 'step-2': 2 })
+      simDataStore.addQueueHistoryEntry({ tick: 1, stepId: 'step-1', queueSize: 3 })
+      simDataStore.incrementCompletedCount()
 
-      dataState = useSimulationDataStore.getState()
-      expect(dataState.workItems).toHaveLength(2)
-      expect(dataState.completedCount).toBe(1)
-      expect(dataState.queueSizesByStepId).toEqual({ 'step-1': 3, 'step-2': 2 })
+      expect(simDataStore.workItems).toHaveLength(2)
+      expect(simDataStore.completedCount).toBe(1)
+      expect(simDataStore.queueSizesByStepId).toEqual({ 'step-1': 3, 'step-2': 2 })
 
       // Pause simulation
-      setPaused(true)
-      controlState = useSimulationControlStore.getState()
-      dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(false)
-      expect(controlState.isPaused).toBe(true)
-      expect(dataState.completedCount).toBe(1) // State preserved
+      simControlStore.setPaused(true)
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simControlStore.isPaused).toBe(true)
+      expect(simDataStore.completedCount).toBe(1) // State preserved
 
       // Resume simulation
-      setRunning(true)
-      controlState = useSimulationControlStore.getState()
-      dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(true)
-      expect(controlState.isPaused).toBe(false)
-      expect(dataState.completedCount).toBe(1) // State still preserved
+      simControlStore.setRunning(true)
+      expect(simControlStore.isRunning).toBe(true)
+      expect(simControlStore.isPaused).toBe(false)
+      expect(simDataStore.completedCount).toBe(1) // State still preserved
 
       // Continue and complete simulation
-      incrementCompletedCount()
-      incrementCompletedCount()
-      setResults({
+      simDataStore.incrementCompletedCount()
+      simDataStore.incrementCompletedCount()
+      simDataStore.setResults({
         completedCount: 3,
         avgLeadTime: 150,
         throughput: 0.5,
         bottlenecks: ['step-1'],
       })
-      setRunning(false)
+      simControlStore.setRunning(false)
 
-      controlState = useSimulationControlStore.getState()
-      dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(false)
-      expect(dataState.completedCount).toBe(3)
-      expect(dataState.results).toEqual({
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simDataStore.completedCount).toBe(3)
+      expect(simDataStore.results).toEqual({
         completedCount: 3,
         avgLeadTime: 150,
         throughput: 0.5,
@@ -383,62 +297,51 @@ describe('simulationStore', () => {
       })
 
       // Reset for next simulation
-      resetControl()
-      resetData()
-      controlState = useSimulationControlStore.getState()
-      dataState = useSimulationDataStore.getState()
-      expect(controlState.isRunning).toBe(false)
-      expect(controlState.isPaused).toBe(false)
-      expect(dataState.completedCount).toBe(0)
-      expect(dataState.workItems).toEqual([])
-      expect(dataState.queueHistory).toEqual([])
-      expect(dataState.results).toBeNull()
+      simControlStore.reset()
+      simDataStore.reset()
+      expect(simControlStore.isRunning).toBe(false)
+      expect(simControlStore.isPaused).toBe(false)
+      expect(simDataStore.completedCount).toBe(0)
+      expect(simDataStore.workItems).toEqual([])
+      expect(simDataStore.queueHistory).toEqual([])
+      expect(simDataStore.results).toBeNull()
     })
 
     it('handles speed changes during active simulation', () => {
-      const { setRunning, setSpeed } = useSimulationControlStore.getState()
-
       // Start simulation at normal speed
-      setRunning(true)
-      setSpeed(1.0)
+      simControlStore.setRunning(true)
+      simControlStore.setSpeed(1.0)
 
-      let state = useSimulationControlStore.getState()
-      expect(state.isRunning).toBe(true)
-      expect(state.speed).toBe(1.0)
+      expect(simControlStore.isRunning).toBe(true)
+      expect(simControlStore.speed).toBe(1.0)
 
       // Speed up during simulation
-      setSpeed(2.0)
-      state = useSimulationControlStore.getState()
-      expect(state.isRunning).toBe(true)
-      expect(state.speed).toBe(2.0)
+      simControlStore.setSpeed(2.0)
+      expect(simControlStore.isRunning).toBe(true)
+      expect(simControlStore.speed).toBe(2.0)
 
       // Slow down
-      setSpeed(0.5)
-      state = useSimulationControlStore.getState()
-      expect(state.isRunning).toBe(true)
-      expect(state.speed).toBe(0.5)
+      simControlStore.setSpeed(0.5)
+      expect(simControlStore.isRunning).toBe(true)
+      expect(simControlStore.speed).toBe(0.5)
     })
 
     it('tracks queue history throughout simulation', () => {
-      const { setRunning } = useSimulationControlStore.getState()
-      const { addQueueHistoryEntry } = useSimulationDataStore.getState()
-
-      setRunning(true)
+      simControlStore.setRunning(true)
 
       // Simulate multiple ticks with queue changes
-      addQueueHistoryEntry({ tick: 1, stepId: 'step-1', queueSize: 5 })
-      addQueueHistoryEntry({ tick: 2, stepId: 'step-1', queueSize: 7 })
-      addQueueHistoryEntry({ tick: 3, stepId: 'step-1', queueSize: 4 })
-      addQueueHistoryEntry({ tick: 1, stepId: 'step-2', queueSize: 2 })
+      simDataStore.addQueueHistoryEntry({ tick: 1, stepId: 'step-1', queueSize: 5 })
+      simDataStore.addQueueHistoryEntry({ tick: 2, stepId: 'step-1', queueSize: 7 })
+      simDataStore.addQueueHistoryEntry({ tick: 3, stepId: 'step-1', queueSize: 4 })
+      simDataStore.addQueueHistoryEntry({ tick: 1, stepId: 'step-2', queueSize: 2 })
 
-      const state = useSimulationDataStore.getState()
-      expect(state.queueHistory).toHaveLength(4)
-      expect(state.queueHistory[0]).toEqual({
+      expect(simDataStore.queueHistory).toHaveLength(4)
+      expect(simDataStore.queueHistory[0]).toEqual({
         tick: 1,
         stepId: 'step-1',
         queueSize: 5,
       })
-      expect(state.queueHistory[1]).toEqual({
+      expect(simDataStore.queueHistory[1]).toEqual({
         tick: 2,
         stepId: 'step-1',
         queueSize: 7,
@@ -446,14 +349,6 @@ describe('simulationStore', () => {
     })
 
     it('handles scenario switching during simulation workflow', () => {
-      const { setRunning } = useSimulationControlStore.getState()
-      const { setResults, reset: resetData } = useSimulationDataStore.getState()
-      const {
-        addScenario,
-        setActiveScenario,
-        setComparisonResults,
-      } = useScenarioStore.getState()
-
       // Add baseline scenario
       const baseline = {
         id: 'baseline',
@@ -461,20 +356,20 @@ describe('simulationStore', () => {
         steps: [],
         connections: [],
       }
-      addScenario(baseline)
-      setActiveScenario('baseline')
+      scenarioStore.addScenario(baseline)
+      scenarioStore.setActiveScenario('baseline')
 
       // Run baseline simulation
-      setRunning(true)
-      setResults({
+      simControlStore.setRunning(true)
+      simDataStore.setResults({
         completedCount: 10,
         avgLeadTime: 200,
         throughput: 0.5,
         bottlenecks: ['step-1'],
       })
-      setRunning(false)
+      simControlStore.setRunning(false)
 
-      const baselineResults = useSimulationDataStore.getState().results
+      const baselineResults = simDataStore.results
 
       // Add improved scenario
       const improved = {
@@ -483,34 +378,32 @@ describe('simulationStore', () => {
         steps: [],
         connections: [],
       }
-      addScenario(improved)
-      setActiveScenario('improved')
+      scenarioStore.addScenario(improved)
+      scenarioStore.setActiveScenario('improved')
 
-      let scenarioState = useScenarioStore.getState()
-      expect(scenarioState.activeScenarioId).toBe('improved')
-      expect(scenarioState.scenarios).toHaveLength(2)
+      expect(scenarioStore.activeScenarioId).toBe('improved')
+      expect(scenarioStore.scenarios).toHaveLength(2)
 
       // Reset and run improved scenario
-      resetData()
-      setRunning(true)
-      setResults({
+      simDataStore.reset()
+      simControlStore.setRunning(true)
+      simDataStore.setResults({
         completedCount: 10,
         avgLeadTime: 150,
         throughput: 0.67,
         bottlenecks: [],
       })
-      setRunning(false)
+      simControlStore.setRunning(false)
 
       // Set comparison results
-      setComparisonResults({
+      scenarioStore.setComparisonResults({
         baseline: baselineResults,
-        scenario: useSimulationDataStore.getState().results,
+        scenario: simDataStore.results,
         improvement: { leadTime: 50 },
       })
 
-      scenarioState = useScenarioStore.getState()
-      expect(scenarioState.comparisonResults).toBeDefined()
-      expect(scenarioState.comparisonResults.improvement.leadTime).toBe(50)
+      expect(scenarioStore.comparisonResults).toBeDefined()
+      expect(scenarioStore.comparisonResults.improvement.leadTime).toBe(50)
     })
   })
 })
