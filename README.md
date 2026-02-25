@@ -1,90 +1,67 @@
-# VSM Workshop
+# Rocinante Mission Template
 
-This application is a digital workshop for creating, analyzing, and simulating Value Stream Maps (VSMs). Value Stream Mapping is a lean-management method for analyzing the current state and designing a future state for the series of events that take a product or service from its beginning through to the customer.
+A Svelte 5 + Vite quality-infrastructure template. Ships with every quality gate
+pre-configured so you can start building features immediately.
 
-This tool allows you to visually build your value stream, input key metrics for each step, and run simulations to identify bottlenecks and calculate overall flow efficiency.
+## What's included
 
-## Getting Started
+| Layer | Directory | Purpose |
+|-------|-----------|---------|
+| UI | `src/` | Svelte 5 components, entry point |
+| Business logic | `core/` | Pure JS functions — no framework, no side effects |
+| Strings | `content/` | User-facing copy (`en.json`) — i18n-ready |
+| Design tokens | `design-system/` | Tailwind v4 `@theme` variables |
+| Integrations | `services/` | API wrappers, all fetch/side-effect code |
 
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+## Quality infrastructure
 
-### Prerequisites
-
-This project uses `pnpm` as its package manager. Make sure you have Node.js and `pnpm` installed on your system.
-
-- [Node.js](https://nodejs.org/)
-- [pnpm](https://pnpm.io/installation)
-
-### Installation
-
-1. Clone the repository:
-
-   ```sh
-   git clone <repository-url>
-   ```
-
-2. Navigate to the project directory:
-
-   ```sh
-   cd vsm-workshop
-   ```
-
-3. Install the dependencies:
-
-   ```sh
-   pnpm install
-   ```
+| Tool | Purpose |
+|------|---------|
+| Vitest | Unit + integration tests |
+| Cucumber.js | Acceptance tests (ATDD / BDD) |
+| Playwright | E2E + visual regression |
+| ESLint + Prettier | Lint and format |
+| Husky + lint-staged | Pre-commit gate |
 
 ## Usage
 
-### Development Server
+### Create a new project from this template
 
-To run the application in development mode with hot-reloading, use the following command. This will start a local server, typically on `http://localhost:5173`.
+```bash
+/new-project <name>
+```
 
-```sh
+Or directly via GitHub CLI:
+
+```bash
+gh repo create <name> --template gbrettmiller/rocinante-mission-template --clone
+cd <name>
+pnpm install
+cp .env.example .env
 pnpm dev
 ```
 
-### Building for Production
+### Essential commands
 
-To create a production-ready build of the application, run:
-
-```sh
-pnpm build
+```bash
+pnpm dev              # Start dev server
+pnpm test             # Unit tests (Vitest)
+pnpm test:acceptance  # Acceptance tests (Cucumber)
+pnpm test:all         # All tests
+pnpm build            # Production build
+pnpm lint             # Lint
 ```
 
-The optimized and minified files will be placed in the `dist` directory.
+### Quality gate (run before every commit)
 
-## Testing
-
-This project includes several types of tests to ensure quality and correctness.
-
-### Unit & Integration Tests (Vitest)
-
-To run the fast unit and integration tests once, execute:
-
-```sh
-pnpm test
+```bash
+pnpm test && pnpm build && pnpm lint
 ```
 
-To run these tests in interactive watch mode, use:
+## Environment variables
 
-```sh
-pnpm test:watch
-```
+Copy `.env.example` to `.env` and fill in:
 
-### End-to-End Tests (Playwright)
-
-To run the end-to-end tests that simulate real user interactions in a browser, use:
-
-```sh
-pnpm test:e2e
-```
-
-### Acceptance Tests (Cucumber)
-
-To run the behavior-driven development (BDD) acceptance tests, use:
-
-```sh
-pnpm test:acceptance
-```
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `VITE_API_URL` | `/api` | API base URL |

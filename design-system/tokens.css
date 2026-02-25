@@ -1,0 +1,12 @@
+@theme {
+  /* Colors */
+  --color-surface: oklch(0.98 0 0);
+  --color-surface-dark: oklch(0.14 0 0);
+  --color-text: oklch(0.25 0 0);
+  --color-text-dark: oklch(0.95 0 0);
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+
+  /* Spacing scale is Tailwind default — override here if needed */
+}

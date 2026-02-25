@@ -1,492 +1,158 @@
 # Architecture Guide
 
-**Deep dive into system design, data flow, and architectural patterns.**
+**System design, layer responsibilities, and data flow for the hello-world template.**
 
 ---
 
-## System Architecture
+## Overview
+
+The project is a **Svelte 5 + Vite** application organized into five distinct layers. The hard rule is that each layer has a single responsibility and defined dependency direction: the framework layer (`src/`) is the only layer allowed to import from the others; the others do not import from `src/`.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         App.jsx                              │
-│                    (Root Component)                          │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-        ┌────────────┼────────────┐
-        │            │            │
-        ▼            ▼            ▼
-  ┌─────────┐  ┌─────────┐  ┌──────────┐
-  │ Builder │  │ Canvas  │  │ Metrics  │
-  │ Wizard  │  │ View    │  │Dashboard │
-  └────┬────┘  └────┬────┘  └────┬─────┘
-       │            │            │
-       └────────────┼────────────┘
-                    │
-                    ▼
-           ┌────────────────┐
-           │  Zustand Store │
-           │   (vsmStore)   │
-           └────────────────┘
-                    │
-        ┌───────────┼───────────┐
-        │           │           │
-        ▼           ▼           ▼
-   ┌────────┐  ┌────────┐  ┌──────────┐
-   │ Steps  │  │Connect │  │Simulation│
-   │        │  │ions    │  │ State    │
-   └────────┘  └────────┘  └──────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        src/                                     │
+│             Svelte components, routes, entry point              │
+│    (imports from core/, content/, design-system/, services/)    │
+└────┬──────────────┬──────────────┬──────────────┬──────────────┘
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+┌─────────┐  ┌──────────┐  ┌───────────────┐  ┌──────────┐
+│  core/  │  │ content/ │  │design-system/ │  │services/ │
+│pure JS  │  │ JSON     │  │  CSS tokens   │  │ fetch /  │
+│no deps  │  │ copy     │  │  (@theme)     │  │side-efts │
+└─────────┘  └──────────┘  └───────────────┘  └──────────┘
 ```
+
+Dependencies only flow **downward** from `src/` into the other layers. The four supporting layers have no knowledge of Svelte and no imports between each other.
 
 ---
 
-## React + Zustand Architecture
+## Layer Responsibilities
 
-### Zustand Store (`vsmStore.js`)
+### `src/` — Svelte application
 
-- **Single source of truth** for VSM data
-- Contains steps, connections, and simulation state
-- Actions for CRUD operations on steps and connections
-- Computed selectors for derived metrics
-- **No prop drilling required** - components access store directly
+Contains everything Svelte: components, routes, and the entry point. This is the only layer that uses Svelte syntax or imports Svelte-specific APIs.
 
-See [../examples/zustand-stores.md](../examples/zustand-stores.md) for complete store patterns and examples.
+**Current files:**
+- `App.svelte` — root component; wires theme logic, renders content
+- `main.js` — entry point; mounts `App` via `svelte/mount`
+- `index.css` — imports the design-system tokens
 
-### Component Hierarchy
+`App.svelte` is the consumer of all other layers. It imports `createTheme` from `core/`, user-facing strings from `content/`, and would call `services/` for any API interactions.
 
-```
-App
-├── BuilderWizard (src/components/builder/)
-│   ├── StepForm - Add/edit individual steps
-│   ├── ConnectionForm - Define flow between steps
-│   └── ValidationSummary - Show data quality issues
-│
-├── CanvasView (src/components/canvas/)
-│   ├── VSMCanvas - React Flow container
-│   ├── nodes/
-│   │   ├── StepNode - Custom node for process steps
-│   │   ├── QueueNode - Visual queue representation
-│   │   └── GateNode - Quality gates
-│   └── edges/
-│       ├── ForwardEdge - Standard process flow
-│       └── ReworkEdge - Rework loops (dashed)
-│
-├── MetricsDashboard (src/components/metrics/)
-│   ├── FlowEfficiencyCard - Key metric display
-│   ├── LeadTimeBreakdown - Timeline visualization
-│   ├── BottleneckIndicator - Identify constraints
-│   └── QualityMetrics - %C&A and first pass yield
-│
-└── SimulationPanel (src/components/simulation/)
-    ├── SimulationControls - Start/pause/reset
-    ├── SimulationVisualizer - Animated work item flow
-    └── SimulationResults - Statistics and insights
-```
+### `core/` — pure JS functions, no framework dependencies
+
+Framework-agnostic business logic and utilities. No Svelte imports, no DOM side effects, no `fetch`. Functions here must be fully unit-testable without a browser or Svelte runtime.
+
+**Current files:**
+- `theme.js` — factory function `createTheme({ storage, prefersDark })` that resolves the current theme from storage/OS preference and toggles between `'light'` and `'dark'`. Also exports `systemPrefersDark`, a convenience wrapper for `window.matchMedia`. Dependencies are injected, making the core logic testable without a DOM.
+
+**Rules for this layer:**
+- Pure functions only
+- No `import` from `src/`, `content/`, `design-system/`, or `services/`
+- No direct DOM access — inject deps that touch the environment
+
+### `content/` — user-facing copy
+
+JSON files containing all user-visible text strings. Keeping copy out of component files makes it easy to audit, translate, or hand off to a content editor without touching code.
+
+**Current files:**
+- `en.json` — English strings for app title and theme-toggle labels
+
+Components import content files directly as JSON via Vite's built-in JSON handling (`import content from '../content/en.json'`).
+
+### `design-system/` — Tailwind v4 CSS tokens
+
+Tailwind CSS v4 `@theme` blocks that define design tokens: colors, typography, and spacing overrides. These are the single source of truth for visual primitives. Components use the token names via Tailwind utility classes; they do not hardcode raw values.
+
+**Current files:**
+- `tokens.css` — defines `--color-surface`, `--color-surface-dark`, `--color-text`, `--color-text-dark`, and `--font-sans` using the Tailwind v4 `@theme` block
+
+The `src/index.css` entry file imports `tokens.css` so tokens are available globally.
+
+### `services/` — API wrappers and side-effectful code
+
+Fetch calls, external API wrappers, and anything with network or I/O side effects. Isolating these makes it straightforward to mock them in tests and swap implementations.
+
+**Current files:**
+- `api.js` — exports `get(endpoint)` and `post(endpoint, data)`. Base URL is read from `VITE_API_URL` env var, falling back to `/api`. Throws on non-OK HTTP responses.
 
 ---
 
-## ReactFlow Canvas Integration
+## Data Flow Example: theme toggle
 
-### Data Flow: Zustand → ReactFlow
+```
+User clicks button (src/App.svelte)
+  → calls theme.toggle(current)          # core/theme.js — pure, no side effects
+  → returns next theme string ('dark')
+  → Svelte $state updates current
+  → $effect toggles class on <html>      # DOM side effect stays in src/
+  → new value written to localStorage    # via injected storage dep in core/theme.js
+```
+
+The key point: the toggle logic in `core/` never touches the DOM directly. `App.svelte` owns the DOM interaction; `core/theme.js` owns the decision logic.
+
+---
+
+## Svelte 5 Patterns in Use
+
+### Runes-based reactivity
+
+This project uses Svelte 5 runes rather than the legacy store API:
 
 ```javascript
-// vsmStore provides nodes and edges
-const nodes = useVsmStore((state) => state.steps.map(step => ({
-  id: step.id,
-  type: 'stepNode',
-  data: step,
-  position: step.position
-})))
+// Reactive state
+let current = $state(theme.resolve())
 
-const edges = useVsmStore((state) => state.connections.map(conn => ({
-  id: conn.id,
-  source: conn.source,
-  target: conn.target,
-  type: conn.type === 'rework' ? 'reworkEdge' : 'forwardEdge'
-})))
-
-// ReactFlow renders nodes/edges and handles interactions
-<ReactFlow
-  nodes={nodes}
-  edges={edges}
-  onNodesChange={handleNodesChange}
-  onEdgesChange={handleEdgesChange}
-  onConnect={handleConnect}
-/>
-```
-
-### Custom Node Types
-
-| Node Type | Purpose | Display |
-|-----------|---------|---------|
-| `StepNode` | Process steps | Step name, timing metrics, %C&A |
-| `QueueNode` | Work queues | Queue size, wait times |
-| `GateNode` | Quality gates | Pass/fail rates |
-
-### Interactions
-
-- **Drag nodes** to reposition in canvas
-- **Click node** to edit step details
-- **Click edge** to modify connection properties
-- **Drag from node handle** to create new connection
-
----
-
-## Simulation Engine Flow
-
-### Simulation Architecture
-
-```
-User triggers simulation
-        │
-        ▼
-┌────────────────────┐
-│ useSimulation hook │
-│ (orchestrator)     │
-└─────────┬──────────┘
-          │
-          ▼
-┌──────────────────────┐
-│ simulationEngine.js  │
-│ (core logic)         │
-└─────────┬────────────┘
-          │
-    ┌─────┴─────┐
-    │           │
-    ▼           ▼
-┌────────┐  ┌─────────┐
-│ Work   │  │ State   │
-│ Items  │  │ Updates │
-└────────┘  └─────────┘
-    │           │
-    └─────┬─────┘
-          │
-          ▼
-    ┌──────────┐
-    │ vsmStore │
-    │ updates  │
-    └──────────┘
-          │
-          ▼
-    UI rerenders
-```
-
-### Simulation Flow (Tick-Based)
-
-#### 1. Initialization
-
-- Create work items with unique IDs
-- Place items in first step's queue
-- Initialize step states (current work, queues)
-
-#### 2. Each Tick (Time Slice)
-
-Process each step in order:
-
-1. **Complete current work** - Decrement remaining time
-2. **Move completed items** - Transfer to next step's queue
-3. **Pull new items from queue** - Respect batch size limits
-4. **Apply %C&A probability** - Quality checks
-5. **Route failed items** - Send to rework loops
-6. **Update metrics** - Cycle time, throughput, WIP
-7. **Store state snapshot** - For visualization
-
-#### 3. Completion
-
-- Calculate final metrics
-- Identify bottlenecks (steps with largest queues)
-- Generate improvement recommendations
-
-### Key Simulation Files
-
-| File | Purpose |
-|------|---------|
-| `src/utils/simulation/simulationEngine.js` | Core tick logic |
-| `src/hooks/useSimulation.js` | React hook wrapper |
-| `src/stores/vsmStore.js` | Simulation state storage |
-
----
-
-## Data Flow Patterns
-
-### User Action → Store → UI Update
-
-```javascript
-// Example: Adding a new step
-
-User clicks "Add Step"
-  → StepForm component captures input
-  → Calls vsmStore.addStep(stepData)
-  → Store updates steps array
-  → All subscribed components rerender
-  → Canvas shows new node
-  → Metrics recalculate automatically
-```
-
-This unidirectional flow ensures:
-- Predictable state updates
-- Easy debugging (single source of truth)
-- Automatic UI synchronization
-
-### Store → Computed Values → Display
-
-```javascript
-// Metrics are derived from store state
-const totalLeadTime = useVsmStore((state) =>
-  state.steps.reduce((sum, step) => sum + step.leadTime, 0)
-)
-
-const flowEfficiency = useVsmStore((state) => {
-  const processTime = state.steps.reduce((sum, s) => sum + s.processTime, 0)
-  const leadTime = state.steps.reduce((sum, s) => sum + s.leadTime, 0)
-  return leadTime > 0 ? (processTime / leadTime) * 100 : 0
+// Side effect that runs when `current` changes
+$effect(() => {
+  document.documentElement.classList.toggle('dark', current === 'dark')
 })
 ```
 
-**Benefits:**
-- No need to manually sync derived state
-- Computed values always consistent with source data
-- Components subscribe only to needed state slices
+### Event handlers
 
-### Simulation Updates
+Svelte 5 uses inline `onclick` (not `on:click`):
 
-```javascript
-// Animation loop updates store at regular intervals
-const runSimulation = () => {
-  const intervalId = setInterval(() => {
-    const newState = simulationEngine.tick(currentState)
-    vsmStore.updateSimulationState(newState)
-
-    if (newState.completed) {
-      clearInterval(intervalId)
-      vsmStore.setSimulationResults(newState.metrics)
-    }
-  }, 100) // 10 ticks per second
-}
+```svelte
+<button onclick={handleToggle}>...</button>
 ```
-
-**Pattern:**
-- Tick-based time simulation
-- State snapshots for replay/visualization
-- Interval-based updates for real-time display
-
----
-
-## Custom Hooks
-
-Application provides specialized hooks for common operations:
-
-### useSimulation
-
-Manages simulation lifecycle:
-
-```javascript
-const {
-  isRunning,
-  progress,
-  results,
-  start,
-  pause,
-  reset
-} = useSimulation()
-```
-
-**Use for:** Starting, controlling, and monitoring simulations
-
-### useVsmMetrics
-
-Computes all metrics from current VSM:
-
-```javascript
-const metrics = useVsmMetrics()
-// { flowEfficiency, leadTime, throughput, ... }
-```
-
-**Use for:** Displaying metrics in dashboard components
-
-### useStepValidation
-
-Validates step data:
-
-```javascript
-const { errors, isValid } = useStepValidation(stepData)
-```
-
-**Use for:** Form validation before saving steps
 
 ---
 
 ## Architecture Decisions
 
-### Why React Flow?
+### Why four supporting layers instead of one `src/utils/`?
 
-**Reasons:**
-- Purpose-built for node-based editors
-- Handles pan, zoom, and connections natively
-- Extensible custom node types
-- Good performance with many nodes
-- Strong community and documentation
+A single utils directory collapses distinctions that matter: copy changes on a different cadence than business logic; design tokens are owned by designers; API wrappers need different mocking strategies than pure functions. Keeping them separate makes each layer's ownership and testing approach obvious.
 
-**Alternatives considered:**
-- D3.js (too low-level for our needs)
-- Cytoscape.js (primarily for graph algorithms)
-- Custom canvas (too much work)
+### Why inject dependencies into `core/` functions?
 
-### Why Zustand?
+`createTheme` receives `storage` and `prefersDark` as arguments rather than calling `localStorage` and `window.matchMedia` directly. This means tests can pass in simple fakes without mocking globals — the function is pure from the test's perspective even though its production usage touches the browser environment.
 
-**Reasons:**
-- Simple API, minimal boilerplate
-- Easy to create multiple stores
-- Built-in devtools support
-- No provider wrapper needed
-- TypeScript-friendly (if we add it later)
-- Small bundle size
+### Why Svelte 5 + Vite?
 
-**Alternatives considered:**
-- Redux (too much boilerplate)
-- Context API (performance concerns with frequent updates)
-- MobX (opinionated, larger learning curve)
-
-### Why Vite?
-
-**Reasons:**
-- Fast HMR for development
-- Optimized production builds
-- Simple configuration
-- Native ES modules support
-- Plugin ecosystem
-
-**Alternatives considered:**
-- Create React App (slower, less flexible)
-- Webpack (more complex configuration)
-- Parcel (less ecosystem support)
-
-### Why ATDD?
-
-**Reasons:**
-- Ensures shared understanding of requirements
-- Living documentation that stays updated
-- Catches requirement issues early
-- Builds confidence in the system
-- Forces thinking from user perspective
-
-**Alternatives considered:**
-- Pure TDD (misses user acceptance criteria)
-- Manual testing (not repeatable, slow)
-- No testing (unacceptable for quality)
-
----
-
-## Performance Considerations
-
-### React Optimization Patterns
-
-See [../rules/javascript-react.md](../rules/javascript-react.md) for details on:
-
-- `React.memo()` for expensive renders
-- `useCallback()` for event handlers
-- `useMemo()` for derived state
-- Controlled forms in editors
-
-### Zustand Optimization
-
-- **Selective subscriptions** - Only subscribe to needed state slices
-- **Computed selectors** - Define getters in store for derived values
-- **Partialize persistence** - Only persist data, not UI state
-- **getState() for one-time reads** - Avoid unnecessary subscriptions
-
-### ReactFlow Optimization
-
-- **Node memoization** - Use `React.memo()` on custom node components
-- **Edge batching** - Update multiple edges at once
-- **Viewport optimization** - ReactFlow handles off-screen node rendering
-
----
-
-## State Persistence
-
-### What Gets Persisted
-
-**Persisted (localStorage):**
-- Steps array
-- Connections array
-- VSM metadata (name, description)
-
-**Not Persisted (ephemeral):**
-- UI state (selected step, panel visibility)
-- Simulation runtime state
-- Undo/redo history
-
-### Persistence Implementation
-
-```javascript
-// vsmStore.js
-export const useVsmStore = create(
-  persist(
-    (set, get) => ({
-      // store definition
-    }),
-    {
-      name: 'vsm-storage', // localStorage key
-      partialize: (state) => ({
-        steps: state.steps,
-        connections: state.connections
-        // Exclude ephemeral UI state
-      })
-    }
-  )
-)
-```
-
----
-
-## Error Handling Strategy
-
-### Error Boundaries
-
-Wrap major sections in error boundaries:
-- Canvas view (React Flow errors)
-- Simulation panel (runtime errors)
-- Metrics dashboard (calculation errors)
-
-### Validation Layers
-
-1. **Input validation** - Form level (zod schemas)
-2. **Business logic validation** - Domain rules (see [vsm-domain.md](../rules/vsm-domain.md))
-3. **Store validation** - Before persisting state
-
-### Logging
-
-Critical failures log to Application Insights (when configured).
+- Svelte 5 runes eliminate the legacy store boilerplate and compile down to minimal JS
+- Vite provides fast HMR and native ES module support with minimal config
+- Tailwind CSS v4's `@theme` block replaces the separate config file with co-located token definitions
 
 ---
 
 ## Testing Strategy
 
-See [../rules/testing.md](../rules/testing.md) for complete testing guidelines.
-
-### Architecture Testing
-
-| Layer | Test Type | What to Test |
-|-------|-----------|--------------|
-| **Stores** | Unit | Actions, selectors, state updates |
-| **Hooks** | Integration | Hook behavior with mocked stores |
-| **Components** | Integration | Component + store interactions |
-| **Simulation** | Unit + Integration | Tick logic, state progression |
-| **End-to-end** | E2E (Playwright) | Complete user flows |
+| Layer | Test approach | What to test |
+|-------|--------------|--------------|
+| `core/` | Unit (Vitest) | All branches of pure functions; inject fake deps |
+| `services/` | Unit with fetch mock | Request construction, error handling |
+| `content/` | Linting / schema | Valid JSON, required keys present |
+| `design-system/` | Visual regression (Playwright) | Token values render correctly |
+| `src/` | Component + E2E | User-visible behavior end-to-end |
 
 ---
 
 ## Related Documentation
 
-- [Project Structure](project-structure.md) - Directory layout
-- [Workflows](workflows.md) - Common development workflows
-- [Zustand Store Examples](../examples/zustand-stores.md) - State management patterns
-- [React Component Examples](../examples/react-components.md) - Component patterns
-- [VSM Domain Rules](../rules/vsm-domain.md) - Business logic and validation
-
----
-
-**Next Steps:**
-- Review [workflows.md](workflows.md) for common development procedures
-- Study [examples/](../examples/) for implementation patterns
-- Practice with [skills/](../skills/) workflows
+- [Project Structure](project-structure.md) — directory layout
+- [Workflows](workflows.md) — common development procedures
+- [Testing Rules](../rules/testing.md) — testing guidelines
+- [Quality Verification](../rules/quality-verification.md) — mandatory quality gates

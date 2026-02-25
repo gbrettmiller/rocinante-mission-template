@@ -1,4 +1,4 @@
-# Hello World Template - Claude Development Guide
+# Rocinante Mission Template - Claude Development Guide
 
 > **This repo is a quality-infrastructure template.**
 > It ships with Svelte 5, Vite, Tailwind CSS, Vitest, Cucumber.js, Playwright, ESLint, Prettier, and Husky pre-configured — ready to build on.
@@ -48,14 +48,6 @@ export const createThing = () => {
 // ❌ BAD
 export class Thing {}
 ```
-
-### 3. Quality Gates Are Mandatory
-```bash
-pnpm test && pnpm build && pnpm lint
-```
-All three must pass before every commit.
-
----
 
 ## Tech Stack
 

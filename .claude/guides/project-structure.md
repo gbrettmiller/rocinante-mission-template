@@ -1,13 +1,13 @@
 # Project Structure Guide
 
-**Directory layout and file organization for VSM Workshop.**
+**Directory layout and file organization for the hello-world template.**
 
 ---
 
 ## Complete Directory Tree
 
 ```
-vsm-workshop/
+service-audit/
 ├── .claude/                 # Claude development configuration
 │   ├── INDEX.md             # Main entry point
 │   ├── QUICK_START.md       # 5-minute onboarding
@@ -17,27 +17,22 @@ vsm-workshop/
 │   ├── checklists/          # Quick reference checklists
 │   └── skills/              # Task-specific workflows
 │
-├── src/                     # Application source code
-│   ├── components/          # React components
-│   │   ├── builder/         # VSM builder wizard components
-│   │   ├── canvas/          # React Flow canvas and nodes
-│   │   │   ├── nodes/       # Custom node types (StepNode, QueueNode, etc.)
-│   │   │   └── edges/       # Custom edge types (ForwardEdge, ReworkEdge)
-│   │   ├── metrics/         # Metrics dashboard components
-│   │   ├── simulation/      # Work flow simulation components
-│   │   └── ui/              # Shared UI components (buttons, inputs, etc.)
-│   ├── hooks/               # Custom React hooks (useSimulation, useVsmMetrics)
-│   ├── stores/              # Zustand stores (vsmStore, simulationStore)
-│   ├── utils/               # Utility functions
-│   │   ├── calculations/    # Metrics calculations (flowEfficiency, etc.)
-│   │   ├── simulation/      # Simulation logic (simulationEngine.js)
-│   │   ├── validation/      # Validation utilities
-│   │   └── export/          # Export utilities (PDF, image, JSON)
-│   ├── models/              # Domain models (factory functions)
-│   ├── infrastructure/      # Infrastructure concerns (repositories)
-│   ├── services/            # Service layer (business logic)
-│   ├── data/                # Static data (templates, examples, step types)
-│   └── App.jsx              # Root component
+├── core/                    # Pure JS/TS functions — no framework deps, no side effects
+│   └── theme.js             # createTheme() factory; systemPrefersDark() helper
+│
+├── content/                 # User-facing copy as JSON
+│   └── en.json              # English strings (app title, theme-toggle labels)
+│
+├── design-system/           # Tailwind v4 @theme CSS token definitions
+│   └── tokens.css           # Color, typography, and spacing tokens
+│
+├── services/                # API wrappers and side-effectful fetch code
+│   └── api.js               # get() and post() helpers; reads VITE_API_URL
+│
+├── src/                     # Svelte components, routes, and entry point
+│   ├── App.svelte           # Root component
+│   ├── main.js              # Entry point — mounts App via svelte/mount
+│   └── index.css            # Imports design-system tokens; global styles
 │
 ├── features/                # Gherkin feature files (BDD/ATDD)
 │   ├── builder/             # VSM builder features
@@ -73,102 +68,42 @@ vsm-workshop/
 
 ---
 
-## Source Code Organization (`src/`)
+## Layer Organization
 
-### Components (`src/components/`)
+### `core/` — pure business logic
 
-React components organized by feature domain:
+Framework-agnostic JS functions. No Svelte imports, no DOM side effects, no `fetch`. Everything here must be fully unit-testable without a browser.
 
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| `builder/` | VSM builder wizard | `StepForm.jsx`, `ConnectionForm.jsx`, `ValidationSummary.jsx` |
-| `canvas/` | React Flow diagram | `VSMCanvas.jsx`, `nodes/`, `edges/` |
-| `metrics/` | Metrics dashboard | `MetricsDashboard.jsx`, `FlowEfficiencyCard.jsx` |
-| `simulation/` | Simulation UI | `SimulationControls.jsx`, `SimulationVisualizer.jsx` |
-| `ui/` | Shared UI components | `Button.jsx`, `Input.jsx`, `Modal.jsx` |
+**Naming conventions:**
+- Factory functions prefixed with `create` (e.g., `createTheme`)
+- Named exports — no default exports
+- JSDoc on every exported function
 
-**Component naming convention:**
-- PascalCase for component files (`StepForm.jsx`)
-- Components should be default exports
-- PropTypes required on all components
+### `content/` — user-facing copy
 
-### Hooks (`src/hooks/`)
+JSON only. One file per locale (e.g., `en.json`). Keys are grouped by feature. Components import these files directly via Vite's JSON support.
 
-Custom React hooks for shared logic:
+### `design-system/` — CSS tokens
 
-| Hook | Purpose |
-|------|---------|
-| `useSimulation.js` | Manages simulation lifecycle (start, pause, reset) |
-| `useVsmMetrics.js` | Computes all metrics from current VSM |
-| `useStepValidation.js` | Validates step data |
-| `useLocalStorage.js` | localStorage persistence wrapper |
+Tailwind v4 `@theme` blocks. These define the visual primitives — colors, fonts, spacing overrides. Components reference token names via Tailwind utility classes; raw values live only here.
 
-**Hook naming convention:**
-- Always prefix with `use` (e.g., `useSimulation`)
-- camelCase naming
+### `services/` — side-effectful code
 
-### Stores (`src/stores/`)
+Fetch calls and external API wrappers. Functions here may have network side effects and should be easy to mock in tests. No Svelte imports.
 
-Zustand state management stores:
+**Current exports from `api.js`:**
+- `get(endpoint)` — GET request, returns parsed JSON
+- `post(endpoint, data)` — POST request with JSON body, returns parsed JSON
+- Base URL: `VITE_API_URL` env var, falling back to `/api`
 
-| Store | Purpose | Persisted? |
-|-------|---------|------------|
-| `vsmStore.js` | VSM data (steps, connections) | Yes (localStorage) |
-| `simulationStore.js` | Simulation runtime state | No (ephemeral) |
-| `uiStore.js` | UI state (selected step, panels) | No |
+### `src/` — Svelte application
 
-**Store naming convention:**
-- camelCase + `Store` suffix
-- Named export: `export const useVsmStore = create(...)`
+Svelte components, routes, and the entry point. This is the only layer that uses `.svelte` files or imports Svelte APIs. It imports from all other layers; no other layer imports from `src/`.
 
-See [../examples/zustand-stores.md](../examples/zustand-stores.md) for patterns.
-
-### Utils (`src/utils/`)
-
-Utility functions organized by domain:
-
-| Directory | Purpose | Example Files |
-|-----------|---------|---------------|
-| `calculations/` | Metrics calculations | `flowEfficiency.js`, `metrics.js` |
-| `simulation/` | Simulation logic | `simulationEngine.js`, `workItemFactory.js` |
-| `validation/` | Validation utilities | `vsmValidator.js`, `stepValidator.js` |
-| `export/` | Export utilities | `pdfExporter.js`, `imageExporter.js` |
-
-**Utility naming convention:**
-- Named exports (not default)
-- Pure functions (no side effects)
-- JSDoc comments required
-
-### Models (`src/models/`)
-
-Domain models using factory functions:
-
-| File | Purpose |
-|------|---------|
-| `StepFactory.js` | Creates step objects |
-| `ConnectionFactory.js` | Creates connection objects |
-| `WorkItemFactory.js` | Creates work item objects for simulation |
-
-**Example:**
-```javascript
-export const createStep = ({ name, processTime, leadTime }) => ({
-  id: generateId(),
-  name,
-  processTime,
-  leadTime,
-  // ... other properties
-})
-```
-
-### Data (`src/data/`)
-
-Static data and configuration:
-
-| File | Purpose |
-|------|---------|
-| `stepTypes.js` | Step type constants (`STEP_TYPES`) |
-| `stepTemplates.js` | Template steps for common scenarios |
-| `exampleMaps.js` | Example VSMs for demos/testing |
+**Component naming conventions:**
+- PascalCase for `.svelte` files (e.g., `App.svelte`)
+- Use Svelte 5 runes (`$state`, `$effect`, `$derived`) — not the legacy store API
+- Event handlers use `onclick={}` syntax (not `on:click`)
 
 ---
 
@@ -194,30 +129,23 @@ See [../rules/atdd-workflow.md](../rules/atdd-workflow.md) for ATDD guidelines.
 
 ## Test Files (`tests/`)
 
-Test files mirror source structure:
+Unit tests mirror the layer they cover. Place tests adjacent to the layer being tested, not inside `src/`:
 
 ```
 tests/
 ├── unit/
-│   ├── calculations/
-│   │   ├── flowEfficiency.test.js       # Tests src/utils/calculations/flowEfficiency.js
-│   │   └── metrics.test.js
-│   ├── simulation/
-│   │   └── simulationEngine.test.js
-│   ├── stores/
-│   │   └── vsmStore.test.js
-│   └── components/
-│       └── builder/
-│           └── StepForm.test.jsx
+│   ├── core/
+│   │   └── theme.test.js         # Tests core/theme.js
+│   └── services/
+│       └── api.test.js           # Tests services/api.js
 └── e2e/
-    ├── builder.spec.js                   # E2E tests for builder flow
-    └── simulation.spec.js
+    └── app.spec.js               # E2E tests for user-visible behavior
 ```
 
 **Test file naming convention:**
 - `{moduleName}.test.js` for unit tests
 - `{feature}.spec.js` for E2E tests
-- Mirror directory structure of `src/`
+- Mirror the directory structure of the layer under test
 
 See [../rules/testing.md](../rules/testing.md) for testing guidelines.
 
@@ -255,17 +183,17 @@ See [../rules/testing.md](../rules/testing.md) for testing guidelines.
 
 ### General Rules
 
-- **Components**: PascalCase (e.g., `StepForm.jsx`)
-- **Utilities**: camelCase (e.g., `flowEfficiency.js`)
-- **Stores**: camelCase + `Store` (e.g., `vsmStore.js`)
-- **Hooks**: camelCase + `use` prefix (e.g., `useSimulation.js`)
+- **Svelte components**: PascalCase (e.g., `App.svelte`)
+- **JS modules**: camelCase (e.g., `theme.js`, `api.js`)
 - **Tests**: `{name}.test.js` or `{name}.spec.js`
 - **Feature files**: kebab-case (e.g., `add-step.feature`)
 
 ### Extensions
 
-- `.jsx` for React components (files with JSX syntax)
-- `.js` for JavaScript modules (no JSX)
+- `.svelte` for Svelte components
+- `.js` for JavaScript modules
+- `.css` for stylesheets (including design-system tokens)
+- `.json` for content/copy files
 - `.feature` for Gherkin/Cucumber feature files
 - `.md` for documentation
 
@@ -275,76 +203,64 @@ See [../rules/testing.md](../rules/testing.md) for testing guidelines.
 
 ### Relative Imports
 
-Use relative imports within the same module:
+Use relative paths when importing between layers. From `src/`, go up one level to reach `core/`, `content/`, `design-system/`, or `services/`:
 
 ```javascript
-// Within src/components/builder/
-import { ValidationSummary } from './ValidationSummary'
-```
-
-### Absolute Imports
-
-Import from other modules using relative path from `src/`:
-
-```javascript
-// From src/components/builder/StepForm.jsx
-import { useVsmStore } from '../../stores/vsmStore'
-import { calculateMetrics } from '../../utils/calculations/metrics'
-import { Button } from '../ui/Button'
+// In src/App.svelte
+import { createTheme, systemPrefersDark } from '../core/theme.js'
+import content from '../content/en.json'
 ```
 
 ### Import Order
 
-1. External dependencies (React, libraries)
-2. Internal modules (stores, utils, hooks)
-3. Components
-4. Assets (CSS, images)
+1. External dependencies (Svelte, libraries)
+2. `core/` — pure logic
+3. `content/` — copy
+4. `services/` — API wrappers
+5. Other Svelte components
+6. Assets (CSS)
 
 ```javascript
 // 1. External
-import { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
+import { mount } from 'svelte'
 
-// 2. Internal
-import { useVsmStore } from '../../stores/vsmStore'
-import { calculateMetrics } from '../../utils/calculations/metrics'
+// 2. Core
+import { createTheme, systemPrefersDark } from '../core/theme.js'
 
-// 3. Components
-import { Button } from '../ui/Button'
+// 3. Content
+import content from '../content/en.json'
 
-// 4. Assets
-import './StepForm.css'
+// 4. Services (if needed)
+import { get } from '../services/api.js'
 ```
 
 ---
 
 ## Where to Add New Files
 
-### Adding a New Component
+### Adding a new Svelte component
 
-**Location:** `src/components/{domain}/{ComponentName}.jsx`
+**Location:** `src/{ComponentName}.svelte` or a subdirectory as the app grows (e.g., `src/components/{ComponentName}.svelte`)
 
-Example:
-- Builder component → `src/components/builder/NewForm.jsx`
-- UI component → `src/components/ui/NewButton.jsx`
+### Adding pure business logic
 
-### Adding a New Utility
+**Location:** `core/{moduleName}.js`
 
-**Location:** `src/utils/{domain}/{utilityName}.js`
+Use a factory function if the logic needs injected dependencies; use named function exports if it's stateless.
 
-Example:
-- Calculation → `src/utils/calculations/newMetric.js`
-- Validation → `src/utils/validation/newValidator.js`
+### Adding user-facing copy
 
-### Adding a New Hook
+**Location:** `content/en.json` — add a key under the relevant feature namespace.
 
-**Location:** `src/hooks/useNewHook.js`
+### Adding design tokens
 
-### Adding a New Store
+**Location:** `design-system/tokens.css` — add a CSS custom property inside the `@theme` block.
 
-**Location:** `src/stores/newStore.js`
+### Adding an API wrapper
 
-### Adding a New Feature
+**Location:** `services/api.js` (extend existing file) or `services/{domain}.js` for a new service domain.
+
+### Adding a new feature
 
 1. Feature file → `features/{domain}/new-feature.feature`
 2. Step definitions → `features/step-definitions/{domain}.steps.js`
@@ -360,7 +276,7 @@ Example:
 
 - [Architecture Guide](architecture.md) - System design and patterns
 - [Workflows Guide](workflows.md) - Common development procedures
-- [JavaScript/React Rules](../rules/javascript-react.md) - Code style guidelines
+- [JavaScript Rules](../rules/javascript-react.md) - Code style guidelines (functional programming conventions)
 - [Skills Directory](../skills/) - Task-specific workflows
 
 ---

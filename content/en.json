@@ -1,0 +1,11 @@
+{
+  "app": {
+    "title": "Hello, World!"
+  },
+  "theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode",
+    "darkLabel": "🌙 Dark",
+    "lightLabel": "☀️ Light"
+  }
+}

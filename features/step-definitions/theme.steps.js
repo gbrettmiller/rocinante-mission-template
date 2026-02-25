@@ -1,6 +1,6 @@
 import { Before, Given, When, Then } from '@cucumber/cucumber'
 import { expect } from 'chai'
-import { createTheme } from '../../src/theme.js'
+import { createTheme } from '../../core/theme.js'
 
 Before(function () {
   this.storage = { data: {}, getItem: (k) => this.storage.data[k] ?? null, setItem: (k, v) => { this.storage.data[k] = v } }

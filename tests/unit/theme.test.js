@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createTheme } from '../../src/theme.js'
+import { createTheme } from '../../core/theme.js'
 
 const makeStorage = (initial = {}) => {
   const data = { ...initial }
