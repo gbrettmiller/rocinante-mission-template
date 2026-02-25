@@ -1,65 +1,6 @@
 <script>
-  import { SvelteFlowProvider } from '@xyflow/svelte'
-  import { vsmDataStore } from './stores/vsmDataStore.svelte.js'
-  import { vsmUIStore } from './stores/vsmUIStore.svelte.js'
-  import Header from './components/ui/Header.svelte'
-  import Canvas from './components/canvas/Canvas.svelte'
-  import Sidebar from './components/ui/Sidebar.svelte'
-  import MetricsDashboard from './components/metrics/MetricsDashboard.svelte'
-  import WelcomeScreen from './components/ui/WelcomeScreen.svelte'
-  import EditorPanel from './components/ui/EditorPanel.svelte'
-  import SimulationPanel from './components/ui/SimulationPanel.svelte'
-  import SimulationControls from './components/simulation/SimulationControls.svelte'
-
-  // Reactive derived values from stores
-  let hasVsm = $derived(vsmDataStore.id !== null)
-  let selectedStepId = $derived(vsmUIStore.selectedStepId)
-  let isEditing = $derived(vsmUIStore.isEditing)
-  let selectedConnectionId = $derived(vsmUIStore.selectedConnectionId)
-  let isEditingConnection = $derived(vsmUIStore.isEditingConnection)
-
-  function handleCanvasClick() {
-    if (isEditing || isEditingConnection) return
-    vsmUIStore.clearSelection()
-    vsmUIStore.clearConnectionSelection()
-  }
-
-  function handleCloseEditor() {
-    vsmUIStore.setEditing(false)
-    vsmUIStore.clearSelection()
-  }
-
-  function handleCloseConnectionEditor() {
-    vsmUIStore.clearConnectionSelection()
-  }
 </script>
 
-{#if !hasVsm}
-  <WelcomeScreen />
-{:else}
-  <SvelteFlowProvider>
-    <div class="h-screen flex flex-col bg-gray-100">
-      <Header />
-      <div class="flex-1 flex overflow-hidden">
-        <Sidebar />
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-        <main class="flex-1 flex flex-col" onclick={handleCanvasClick}>
-          <SimulationControls />
-          <div class="flex-1 relative">
-            <Canvas />
-          </div>
-          <SimulationPanel />
-          <MetricsDashboard />
-        </main>
-        <EditorPanel
-          {selectedStepId}
-          {isEditing}
-          {selectedConnectionId}
-          {isEditingConnection}
-          onCloseEditor={handleCloseEditor}
-          onCloseConnectionEditor={handleCloseConnectionEditor}
-        />
-      </div>
-    </div>
-  </SvelteFlowProvider>
-{/if}
+<div class="h-screen flex items-center justify-center bg-gray-50">
+  <h1 class="text-4xl font-bold text-gray-800">Hello, World!</h1>
+</div>
