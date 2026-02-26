@@ -67,15 +67,7 @@ If ANY check fails, the change is NOT complete. Fix the issues and re-run all ch
 
 ## When to Run Quality Checks
 
-Run quality verification:
-
-- ✅ After every code change (even small ones)
-- ✅ After refactoring
-- ✅ After converting classes to functions
-- ✅ After adding new features
-- ✅ After fixing bugs
-- ✅ Before committing code
-- ✅ After resolving merge conflicts
+Run after every code change and before every commit.
 
 ## Common Issues and Solutions
 
@@ -142,18 +134,3 @@ Set up your development environment to run checks automatically:
 2. **Watch mode** - Run `pnpm test --watch` during development
 3. **IDE integration** - Configure your IDE to show lint errors in real-time
 
-## Quality Is Non-Negotiable
-
-**Remember:**
-- Passing tests, build, and lint is the MINIMUM bar for quality
-- It's faster to catch issues early than to debug them later
-- Quality checks protect the codebase from regressions
-- Every developer is responsible for maintaining code quality
-
-**If you skip quality checks, you risk:**
-- Breaking the build for other developers
-- Introducing bugs to production
-- Creating technical debt
-- Losing team trust
-
-**Always verify. Every time. No exceptions.**

@@ -1,3 +1,4 @@
+<!-- Human onboarding guide — do not load in agent context -->
 # Quick Start - VSM Workshop Development
 
 **5-minute guide to start contributing effectively.**

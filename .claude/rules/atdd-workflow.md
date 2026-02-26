@@ -66,32 +66,9 @@ Once a feature file is approved:
 
 ### 5. Step Definition Guidelines
 
-```javascript
-// features/step-definitions/builder.steps.js
-
-import { Given, When, Then } from '@cucumber/cucumber';
-import { expect } from 'chai';
-
-// Steps should be reusable across scenarios
-Given('I have an empty value stream map', function () {
-  this.vsm = { steps: [], connections: [] };
-});
-
-// Use regex for flexible matching
-When(/^I add a step named "([^"]*)"$/, function (name) {
-  // implementation
-});
-
-// Data tables for complex inputs
-Given('a value stream with the following steps:', function (dataTable) {
-  const rows = dataTable.hashes();
-  this.vsm.steps = rows.map(row => ({
-    name: row.name,
-    processTime: parseInt(row.processTime),
-    leadTime: parseInt(row.leadTime)
-  }));
-});
-```
+- Use regex for flexible matching
+- Use data tables for complex inputs
+- Make steps reusable across scenarios
 
 ## File Organization
 
@@ -116,31 +93,7 @@ features/
 
 ## Scenario Guidelines
 
-### Good Scenarios
-
-```gherkin
-Scenario: Calculate flow efficiency
-  Given a value stream with total process time of 120 minutes
-  And total lead time of 480 minutes
-  When I view the metrics dashboard
-  Then the flow efficiency should show "25%"
-```
-
-### Bad Scenarios (Avoid)
-
-```gherkin
-# Too implementation-focused
-Scenario: Flow efficiency calculation
-  Given the flowEfficiency function receives processTime=120 and leadTime=480
-  When I call calculateFlowEfficiency()
-  Then it returns 0.25
-
-# Too vague
-Scenario: Metrics work
-  Given some data
-  When I do something
-  Then it works
-```
+Write scenarios from the user's perspective with no implementation details. Steps should be atomic and reusable.
 
 ## Running Tests
 

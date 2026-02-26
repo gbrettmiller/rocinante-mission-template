@@ -24,33 +24,7 @@ Prettier runs automatically on save and pre-commit. Do not manually format code.
 
 #### Factory Function Pattern
 
-Instead of classes, use factory functions:
-
-```javascript
-// ❌ BAD - Do not use classes
-export class SimulationRunner {
-  constructor() {
-    this.state = {}
-  }
-
-  start() {
-    // ...
-  }
-}
-
-// ✅ GOOD - Use factory functions
-export const createSimulationRunner = () => {
-  let state = {}
-
-  const start = () => {
-    // ...
-  }
-
-  return {
-    start,
-  }
-}
-```
+Instead of classes, use factory functions. See `examples/factory-functions.md`.
 
 ### Modern ES6+ Syntax
 
@@ -98,102 +72,22 @@ function calculateFlowEfficiency(vsm) {
 7. Default props
 8. Export
 
-### Example Component
-
-```javascript
-import { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
-
-function StepEditor({ step, onUpdate }) {
-  const [name, setName] = useState(step?.name || '')
-  const [processTime, setProcessTime] = useState(step?.processTime || 0)
-
-  useEffect(() => {
-    if (step) {
-      setName(step.name)
-      setProcessTime(step.processTime)
-    }
-  }, [step])
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onUpdate({ ...step, name, processTime })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} data-testid="step-editor">
-      <label>
-        Step Name
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          data-testid="step-name-input"
-        />
-      </label>
-      <button type="submit">Save</button>
-    </form>
-  )
-}
-
-StepEditor.propTypes = {
-  step: PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-    processTime: PropTypes.number,
-  }),
-  onUpdate: PropTypes.func.isRequired,
-}
-
-StepEditor.defaultProps = {
-  step: null,
-}
-
-export default StepEditor
-```
+See `examples/react-components.md` for a full component example.
 
 ### PropTypes
 
-Always define PropTypes for components:
+Always define PropTypes for all components. Use `.isRequired` for mandatory props. Example:
 
 ```javascript
 import PropTypes from 'prop-types'
 
 MyComponent.propTypes = {
-  // Required string
   title: PropTypes.string.isRequired,
-
-  // Optional number with default
-  count: PropTypes.number,
-
-  // Required function
   onClick: PropTypes.func.isRequired,
-
-  // Object with specific shape
   step: PropTypes.shape({
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
-    processTime: PropTypes.number,
   }),
-
-  // Array of objects
-  steps: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-    })
-  ),
-
-  // One of specific values
-  status: PropTypes.oneOf(['good', 'warning', 'critical']),
-
-  // Children
-  children: PropTypes.node,
-}
-
-MyComponent.defaultProps = {
-  count: 0,
-  step: null,
-  steps: [],
-  status: 'good',
 }
 ```
 

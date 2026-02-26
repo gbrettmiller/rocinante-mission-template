@@ -38,16 +38,8 @@ pnpm test && pnpm build && pnpm lint
 Feature file → Review → Implementation
 
 ### 2. No Classes, Only Functions
-```javascript
-// ✅ GOOD
-export const createThing = () => {
-  let state = {}
-  return { doWork: () => {} }
-}
 
-// ❌ BAD
-export class Thing {}
-```
+Use factory functions exclusively. See `.claude/examples/factory-functions.md`.
 
 ## Tech Stack
 

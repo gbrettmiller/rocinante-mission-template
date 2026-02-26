@@ -74,56 +74,7 @@ Then('the step should display {string}', function (name) {
 
 ## Component Implementation Pattern
 
-```jsx
-// src/components/builder/StepEditor.jsx
-
-import { useState } from 'react'
-import PropTypes from 'prop-types'
-
-function StepEditor({ step, onUpdate }) {
-  const [name, setName] = useState(step?.name || '')
-  const [processTime, setProcessTime] = useState(step?.processTime || 0)
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onUpdate({ ...step, name, processTime })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} data-testid="step-editor">
-      <label>
-        Step Name
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          data-testid="step-name-input"
-        />
-      </label>
-      <label>
-        Process Time (minutes)
-        <input
-          type="number"
-          value={processTime}
-          onChange={(e) => setProcessTime(Number(e.target.value))}
-          data-testid="process-time-input"
-        />
-      </label>
-      <button type="submit">Save</button>
-    </form>
-  )
-}
-
-StepEditor.propTypes = {
-  step: PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-    processTime: PropTypes.number,
-  }),
-  onUpdate: PropTypes.func.isRequired,
-}
-
-export default StepEditor
-```
+Component conventions: see `rules/javascript-react.md`.
 
 ## Testing Commands
 
